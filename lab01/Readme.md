@@ -400,5 +400,5 @@ trace to 192.168.3.3, 8 hops max, press Ctrl+C to stop
 
 [Конфигурация коммутатора S2](https://github.com/evgzol/OTUS-Network-Engineer/blob/main/lab01/S2.cfg)
 
-[Конфигурация маршрутизатора К1](https://github.com/evgzol/OTUS-Network-Engineer/blob/main/lab01/R1.cfg)
+[Конфигурация маршрутизатора R1](https://github.com/evgzol/OTUS-Network-Engineer/blob/main/lab01/R1.cfg)
 
