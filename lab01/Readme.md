@@ -391,3 +391,7 @@ trace to 192.168.3.3, 8 hops max, press Ctrl+C to stop
 
  ```
 </details>
+
+Ниже приведены ссылки на конфигурацию лабораторной работы для EVE-NG и конфигурации коммутаторов и маршрутизатора
+
+[Схема лабораторной работы](https://github.com/evgzol/OTUS-Network-Engineer/blob/main/lab01/01%20Lab%20VLAN.unl)
