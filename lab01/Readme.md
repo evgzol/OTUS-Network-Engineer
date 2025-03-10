@@ -256,7 +256,7 @@ S2(config-if)#switchport trunk allowed vlan 3,4,8
  ```
 </details>
 
-Прогверка:
+Проверка:
 <details>
 <summary> S1 </summary>
  
