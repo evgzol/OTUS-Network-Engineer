@@ -430,7 +430,7 @@ PortID.
 
 Ниже приведены ссылки на конфигурацию лабораторной работы для EVE-NG и конфигурации коммутаторов и маршрутизатора
 
-[Схема лабораторной работы](https://github.com/evgzol/OTUS-Network-Engineer/blob/main/lab02/01%20Lab%20STP.unl)
+[Схема лабораторной работы](https://github.com/evgzol/OTUS-Network-Engineer/blob/main/lab02/02%20Lab%20STP.unl)
 
 [Конфигурация коммутатора S1](https://github.com/evgzol/OTUS-Network-Engineer/blob/main/lab02/S1.cfg)
 
