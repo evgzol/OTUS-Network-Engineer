@@ -633,10 +633,10 @@ PING 2001:DB8:ACAD:1::1(2001:db8:acad:1::1) 56 data bytes
 
 
 
-[Конфигурация коммутатора S1](https://github.com/evgzol/OTUS-Network-Engineer/blob/main/lab03/S1.cfg)
+[Конфигурация коммутатора S1](https://github.com/evgzol/OTUS-Network-Engineer/blob/main/lab03/S1.txt)
 
-[Конфигурация коммутатора S2](https://github.com/evgzol/OTUS-Network-Engineer/blob/main/lab03/S2.cfg)
+[Конфигурация коммутатора S2](https://github.com/evgzol/OTUS-Network-Engineer/blob/main/lab03/S2.txt)
 
-[Конфигурация маршрутизатора R1](https://github.com/evgzol/OTUS-Network-Engineer/blob/main/lab03/R1.cfg)
+[Конфигурация маршрутизатора R1](https://github.com/evgzol/OTUS-Network-Engineer/blob/main/lab03/R1.txt)
 
-[Конфигурация маршрутизатора R2](https://github.com/evgzol/OTUS-Network-Engineer/blob/main/lab03/R2.cfg)
+[Конфигурация маршрутизатора R2](https://github.com/evgzol/OTUS-Network-Engineer/blob/main/lab03/R2.txt)
