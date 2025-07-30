@@ -397,4 +397,6 @@ C        152.152.152.16/30 is directly connected, Ethernet0/0
 L        152.152.152.18/32 is directly connected, Ethernet0/0
 ```
 
+Т.о. появился "Gateway of last resort".
+
 Конфигурационныe файлы можно найти по [ссылке](./cfg).
