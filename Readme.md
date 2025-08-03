@@ -7,3 +7,4 @@
  - [Lab06. OSPF. Фильтрация](lab06/)  
  - [Lab07. IS-IS](lab07/)
  - [Lab08. EIGRP](lab08/)
+ - [Lab09. BGP, Основы (eBGP)](lab09/)
