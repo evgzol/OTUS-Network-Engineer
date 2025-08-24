@@ -9,7 +9,7 @@
 
 Схема сети представлена на рисунке ниже:
 
-![Topology-with-IP2.jpg](./img/Topology-with-IP3.jpg)
+![Topology-with-IP2.jpg](./img/Topology-with-IP2.jpg)
 
 
 ## Решение
@@ -22,7 +22,6 @@ R14|Loopback100|77.77.77.114/32|GRE
 R14|Loopback200|77.77.77.214/32|DmVPN
 R15|Loopback100|77.77.77.115/32|GRE
 R15|Loopback200|77.77.77.215/32|DmVPN
----|---|---|---
 
 R14:
 ```
@@ -57,7 +56,6 @@ Network|Технология
 10.100.15.0/24|GRE
 10.200.14.0/24|DmVPN
 10.200.15.0/24|DmVPN
----|---|---
 
 ### Настройте GRE между офисами Москва и С.-Петербург
 
