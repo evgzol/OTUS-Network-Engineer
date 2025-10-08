@@ -780,7 +780,7 @@ MAD BFD enabled interface: Vlan-interface999
   1           192.168.99.1/24      2          Faulty
 
 ```   
-Конфигурация доступна по ссылке: [ссылке](./cfg/Reg2-DSW-BFD-MAD.cfg)
+Конфигурация доступна по ссылке: [ссылке](../cfg/Reg2-DSW-BFD-MAD.cfg)
 
 ## Настройка M-LAG
 
