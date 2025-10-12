@@ -1,10 +1,31 @@
 # Построение георазнесённой мультисервисной сети оператора связи
 
+## Оглавление
+1. [Протоколы L2/L3 (внутри региона)](#Протоколы-L2/L3-(внутри-филиала))
+1.1. [Настройка агрегации линков](#Настройка-агрегации-линков)
+1.2. [Настройка VRRP](#Настройка-VRRP)
+1.3. [Настройка Spanning Tree (RSTP)](#Настройка-Spanning-Tree-(RSTP))
+1.4. [Объединение коммутаторов в стек](#Объединение-коммутаторов-в-стек)
+1.5. [Проблемы стекирования](#Проблемы-стекирования)
+1.6. [Настройка BFD MAD](#Настройка-BFD-MAD)
+1.7. [Настройка M-LAG](#Настройка-M-LAG)
+1.8. [Настройка OSPF](#Настройка-OSPF)
+1.9. [](#)
+
+2. [Задачи](#задачи)
+3. [Сетевая топология](#Сетевая-топология)
+4. [План IP адресации](#План-IP-адресации)
+5. [Конфигурация оборудования](#Конфигурация-оборудования)
+6. [Диагностика оборудования](#Диагностика-оборудования)
+7. [Проверка IP связности](#Проверка-IP-связности)
+
+
+
 Примерная схема топологии приведена на рисунке:
 
 ![Shema-draft.png](./img/Shema-draft.png)
 
-# Протоколы L2/L3 (внутри филиала)
+# Протоколы L2/L3 (внутри региона)
 
 ## Настройка агрегации линков
 
@@ -13,28 +34,28 @@
 Reg1-DSW1:
 ```   
 interface Bridge-Aggregation100
- description *** to Reg1-DSW2 (BAGG100)
+ description to Reg1-DSW2 (BAGG100)
  port link-type trunk
  port trunk permit vlan 10 20 99
  link-aggregation mode dynamic
 quit
  
 interface Bridge-Aggregation101
- description *** to Reg1-ASW (BAGG1)
+ description to Reg1-ASW (BAGG1)
  port link-type trunk
  port trunk permit vlan 10 20 99
  link-aggregation mode dynamic
 quit
 
 int XGE1/0/49
- description *** to Reg1-ASW1 (XGE1/0/49)
+ description to Reg1-ASW1 (XGE1/0/49)
  port link-type trunk
  port trunk permit vlan 10 20 99
  port link-aggregation group 101
 quit
 
 int XGE1/0/50
- description *** to Reg1-ASW1 (XGE1/0/50)
+ description to Reg1-ASW1 (XGE1/0/50)
  port link-type trunk
  port trunk permit vlan 10 20 99
  port link-aggregation group 101
@@ -42,14 +63,14 @@ quit
 
 
 int FGE1/0/53
- description *** to Reg1-DSW2 (FGE1/0/53)
+ description to Reg1-DSW2 (FGE1/0/53)
  port link-type trunk
  port trunk permit vlan 10 20 99
  port link-aggregation group 100
 quit
 
 int FGE1/0/54
- description *** to Reg1-DSW2 (FGE1/0/54)
+ description to Reg1-DSW2 (FGE1/0/54)
  port link-type trunk
  port trunk permit vlan 10 20 99
  port link-aggregation group 100
@@ -461,7 +482,7 @@ irf-port 2/2
 #
 ...
 ```   
-Видно, что порты на втором коммутаторе стека отображаются как порты виртуальной "второй интерфейсной карты" (*2*/0/XX), как если бы это был коммутатор с несколькими интерфейсными картами.
+Видно, что порты на втором коммутаторе стека отображаются как порты виртуальной "второй интерфейсной карты" (**2**/0/XX), как если бы это был коммутатор с несколькими интерфейсными картами.
 
 Посмотрим, что стало с RSTP:
 
@@ -762,7 +783,7 @@ MAD BFD enabled interface: Vlan-interface999
 ```   
 
 Отключаем порты стека.
-IRF разделяется, MAD обнаруживает разделение IRF, отключает все сетевые порты на втором коммутаторе, второй коммутатор не работает, первый коммутатор работает. Статус сеанса BFD ненадолго изменится с "Down" на "Up", а затем снова изменится на "Down", так что статус сеанса BFD, который мы видим, всегда будет "Down". Статус в выводе команды *disp mad* изменится с "Normal" на "Faulty".
+IRF разделяется, MAD обнаруживает разделение IRF, отключает все сетевые порты на втором коммутаторе, второй коммутатор не работает, первый коммутатор работает. Статус сеанса BFD ненадолго изменится с "Down" на "Up", а затем снова изменится на "Down", так что статус сеанса BFD, который мы видим, всегда будет "Down". Статус в выводе команды **disp mad** изменится с "Normal" на "Faulty".
 
 ```   
 [Reg2-DSW]disp bfd sess
