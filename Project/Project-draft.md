@@ -799,9 +799,9 @@ MAD BFD enabled interface: Vlan-interface999
 
 ![MLAG-VRRP.svg](./img/MLAG-VRRP.svg)
 
-Проверка PNG-картинки:
+Проверка JPG-картинки:
 
-![MLAG-VRRP.png](./img/MLAG-VRRP.png)
+![MLAG-VRRP.jpg](./img/MLAG-VRRP.jpg)
 
 
 
