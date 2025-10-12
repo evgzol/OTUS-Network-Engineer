@@ -1084,9 +1084,354 @@ Remote:
 ```   
 Конфигурационныe файлы можно найти по [ссылке](./cfg).
 
-##Настройка OSPF
+## Настройка OSPF
+
+В качестве протокола внутренней маршрутизации в регионах используем протокол OSPF.
+
+Рассмотрим настройку протокола OSPF на примере Региона 1. OSPF поднимаем на маршрутизаторах и коммутаторах уровня ядра/распределения.
+Ввиду наличия всего двух маршрутизаторов и двух L3-коммутаторов в сети, можно ограничиться area 0. Всем устройствам назначены Loopback-интеряейсы.
+
+Схема сети региона представлена на рисунке. 
+![OSPF.svg](./img/OSPF.svg)
+
+Таблица OSPF router-id, для простоты совпадает с Loopback-ами:
+
+| NE | router-id | 
+|-----| ----| 
+|Reg1-R1 | 11.11.11.11 |
+|Reg1-R2 | 12.12.12.12 |
+|Reg1-DSW1 | 111.111.111.111 |
+|Reg1-DSW2 | 112.112.112.112 |
+
+Настройка на маршрутизаторе Reg1-R1:
+```   
+ospf 1 router-id 11.11.11.11
+ import-route direct
+ silent-interface all
+ undo silent-interface GE0/1
+ undo silent-interface GE0/2
+ undo silent-interface GE5/0
+  area 0
+ quit
+quit
 
 
+ip route-static 0.0.0.0 0.0.0.0 10.0.0.12
+
+int loopback0
+ ospf 1 area 0
+
+int GE0/1
+ ospf 1 area 0
+quit
+
+int GE0/2
+ ospf 1 area 0
+quit
+
+int GE5/0
+ ospf 1 area 0
+quit
+```   
+
+
+На Reg1-R2 настройка аналогична.
+
+Настройка на коммутаторе Reg1-DSW1:
+```   
+ospf 1 router-id 111.111.111.111
+ silent-interface all
+ undo silent-interface GE1/0/1
+ undo silent-interface GE1/0/2
+  area 0
+ quit
+quit
+
+int loopback0
+ ip address 111.111.111.111 32
+ ospf 1 area 0
+
+int GE1/0/1
+ description to Reg1-R1 (GE0/2)
+ ospf 1 area 0
+quit
+
+int GE1/0/2
+ description to Reg1-R2 (GE5/0)
+ ospf 1 area 0
+quit
+
+interface Vlan-interface10
+ ospf 1 area 0
+quit
+
+interface Vlan-interface20
+ ospf 1 area 0
+quit
+
+interface Vlan-interface99
+ ospf 1 area 0
+quit
+```   
+На Reg1-DSW2 настройка аналогична.
+
+Проверка.
+
+На маршрутизаторах:
+```   
+[Reg1-R1]disp ip routing-table
+
+Destinations : 22       Routes : 27
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+0.0.0.0/32         Direct  0   0           127.0.0.1       InLoop0
+10.1.0.0/31        Direct  0   0           10.1.0.0        GE0/1
+10.1.0.0/32        Direct  0   0           127.0.0.1       InLoop0
+10.1.0.2/31        Direct  0   0           10.1.0.2        GE0/2
+10.1.0.2/32        Direct  0   0           127.0.0.1       InLoop0
+10.1.0.4/31        Direct  0   0           10.1.0.4        GE5/0
+10.1.0.4/32        Direct  0   0           127.0.0.1       InLoop0
+10.1.0.6/31        O_INTRA 10  2           10.1.0.1        GE0/1
+                   O_INTRA 10  2           10.1.0.5        GE5/0
+10.1.0.8/31        O_INTRA 10  2           10.1.0.1        GE0/1
+                   O_INTRA 10  2           10.1.0.3        GE0/2
+10.1.10.0/24       O_INTRA 10  2           10.1.0.3        GE0/2
+                   O_INTRA 10  2           10.1.0.5        GE5/0
+10.1.20.0/24       O_INTRA 10  2           10.1.0.3        GE0/2
+                   O_INTRA 10  2           10.1.0.5        GE5/0
+10.1.99.0/24       O_INTRA 10  2           10.1.0.3        GE0/2
+                   O_INTRA 10  2           10.1.0.5        GE5/0
+11.11.11.11/32     Direct  0   0           127.0.0.1       InLoop0
+12.12.12.12/32     O_INTRA 10  1           10.1.0.1        GE0/1
+111.111.111.111/32 O_INTRA 10  1           10.1.0.3        GE0/2
+112.112.112.112/32 O_INTRA 10  1           10.1.0.5        GE5/0
+127.0.0.0/8        Direct  0   0           127.0.0.1       InLoop0
+127.0.0.1/32       Direct  0   0           127.0.0.1       InLoop0
+127.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+224.0.0.0/4        Direct  0   0           0.0.0.0         NULL0
+224.0.0.0/24       Direct  0   0           0.0.0.0         NULL0
+255.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+[Reg1-R1]disp ospf routing
+
+         OSPF Process 1 with Router ID 11.11.11.11
+                  Routing Table
+
+ Routing for network
+ Destination        Cost     Type    NextHop         AdvRouter       Area
+ 10.1.0.2/31        1        Transit 0.0.0.0         11.11.11.11     0.0.0.0
+ 112.112.112.112/32 1        Stub    10.1.0.5        112.112.112.112 0.0.0.0
+ 10.1.0.4/31        1        Transit 0.0.0.0         11.11.11.11     0.0.0.0
+ 10.1.20.0/24       2        Stub    10.1.0.3        111.111.111.111 0.0.0.0
+ 10.1.20.0/24       2        Stub    10.1.0.5        112.112.112.112 0.0.0.0
+ 10.1.10.0/24       2        Stub    10.1.0.3        111.111.111.111 0.0.0.0
+ 10.1.10.0/24       2        Stub    10.1.0.5        112.112.112.112 0.0.0.0
+ 111.111.111.111/32 1        Stub    10.1.0.3        111.111.111.111 0.0.0.0
+ 10.1.99.0/24       2        Stub    10.1.0.3        111.111.111.111 0.0.0.0
+ 10.1.99.0/24       2        Stub    10.1.0.5        112.112.112.112 0.0.0.0
+ 11.11.11.11/32     0        Stub    0.0.0.0         11.11.11.11     0.0.0.0
+ 10.1.0.8/31        2        Transit 10.1.0.1        12.12.12.12     0.0.0.0
+ 10.1.0.8/31        2        Transit 10.1.0.3        12.12.12.12     0.0.0.0
+ 10.1.0.6/31        2        Transit 10.1.0.1        12.12.12.12     0.0.0.0
+ 10.1.0.6/31        2        Transit 10.1.0.5        12.12.12.12     0.0.0.0
+ 10.1.0.0/31        1        Transit 0.0.0.0         12.12.12.12     0.0.0.0
+ 12.12.12.12/32     1        Stub    10.1.0.1        12.12.12.12     0.0.0.0
+
+ Total nets: 17
+ Intra area: 17  Inter area: 0  ASE: 0  NSSA: 0
+[Reg1-R1]disp ospf lsdb
+
+         OSPF Process 1 with Router ID 11.11.11.11
+                 Link State Database
+
+                         Area: 0.0.0.0
+ Type      LinkState ID    AdvRouter       Age  Len   Sequence  Metric
+ Router    111.111.111.111 111.111.111.111 759  96    80000009  0
+ Router    112.112.112.112 112.112.112.112 741  96    80000009  0
+ Router    11.11.11.11     11.11.11.11     770  72    8000001A  0
+ Router    12.12.12.12     12.12.12.12     780  72    80000011  0
+ Network   10.1.0.8        12.12.12.12     788  32    80000002  0
+ Network   10.1.0.6        12.12.12.12     770  32    80000002  0
+ Network   10.1.0.4        11.11.11.11     768  32    80000002  0
+ Network   10.1.0.2        11.11.11.11     788  32    80000002  0
+ Network   10.1.0.1        12.12.12.12     978  32    80000002  0
+
+                 AS External Database
+ Type      LinkState ID    AdvRouter       Age  Len   Sequence  Metric
+ External  11.11.11.11     11.11.11.11     1350 36    80000003  1
+ External  10.1.0.4        11.11.11.11     1350 36    80000003  1
+ External  10.1.0.0        11.11.11.11     1350 36    80000003  1
+ External  10.1.0.2        11.11.11.11     1350 36    80000003  1
+ External  12.12.12.12     12.12.12.12     128  36    80000003  1
+ External  10.1.0.8        12.12.12.12     128  36    80000003  1
+ External  10.1.0.6        12.12.12.12     128  36    80000003  1
+ External  10.1.0.0        12.12.12.12     128  36    80000003  1
+ [Reg1-R1]disp ospf peer
+
+         OSPF Process 1 with Router ID 11.11.11.11
+               Neighbor Brief Information
+
+ Area: 0.0.0.0
+ Router ID       Address         Pri Dead-Time  State             Interface
+ 12.12.12.12     10.1.0.1        1   34         Full/DR           GE0/1
+ 111.111.111.111 10.1.0.3        1   32         Full/BDR          GE0/2
+ 112.112.112.112 10.1.0.5        1   40         Full/BDR          GE5/0
+
+```   
+На коммутаторах:
+```   
+[Reg1-DSW1]disp ip routing-table
+
+Destinations : 32       Routes : 34
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+0.0.0.0/32         Direct  0   0           127.0.0.1       InLoop0
+10.1.0.0/31        O_INTRA 10  2           10.1.0.2        GE1/0/1
+                                           10.1.0.8        GE1/0/2
+10.1.0.2/31        Direct  0   0           10.1.0.3        GE1/0/1
+10.1.0.3/32        Direct  0   0           127.0.0.1       InLoop0
+10.1.0.4/31        O_INTRA 10  2           10.1.0.2        GE1/0/1
+10.1.0.6/31        O_INTRA 10  2           10.1.0.8        GE1/0/2
+10.1.0.8/31        Direct  0   0           10.1.0.9        GE1/0/2
+10.1.0.9/32        Direct  0   0           127.0.0.1       InLoop0
+10.1.10.0/24       Direct  0   0           10.1.10.251     Vlan10
+10.1.10.0/32       Direct  0   0           10.1.10.251     Vlan10
+10.1.10.251/32     Direct  0   0           127.0.0.1       InLoop0
+10.1.10.255/32     Direct  0   0           10.1.10.251     Vlan10
+10.1.20.0/24       Direct  0   0           10.1.20.251     Vlan20
+10.1.20.0/32       Direct  0   0           10.1.20.251     Vlan20
+10.1.20.251/32     Direct  0   0           127.0.0.1       InLoop0
+10.1.20.255/32     Direct  0   0           10.1.20.251     Vlan20
+10.1.99.0/24       Direct  0   0           10.1.99.251     Vlan99
+10.1.99.0/32       Direct  0   0           10.1.99.251     Vlan99
+10.1.99.251/32     Direct  0   0           127.0.0.1       InLoop0
+10.1.99.254/32     Direct  1   0           127.0.0.1       InLoop0
+10.1.99.255/32     Direct  0   0           10.1.99.251     Vlan99
+11.11.11.11/32     O_INTRA 10  1           10.1.0.2        GE1/0/1
+12.12.12.12/32     O_INTRA 10  1           10.1.0.8        GE1/0/2
+111.111.111.111/32 Direct  0   0           127.0.0.1       InLoop0
+112.112.112.112/32 O_INTRA 10  2           10.1.0.2        GE1/0/1
+                                           10.1.0.8        GE1/0/2
+127.0.0.0/8        Direct  0   0           127.0.0.1       InLoop0
+127.0.0.0/32       Direct  0   0           127.0.0.1       InLoop0
+127.0.0.1/32       Direct  0   0           127.0.0.1       InLoop0
+127.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+224.0.0.0/4        Direct  0   0           0.0.0.0         NULL0
+224.0.0.0/24       Direct  0   0           0.0.0.0         NULL0
+255.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+[Reg1-DSW1]disp ospf routing
+
+         OSPF Process 1 with Router ID 111.111.111.111
+                  Routing Table
+
+                Topology base (MTID 0)
+
+ Routing for network
+ Destination        Cost     Type    NextHop         AdvRouter       Area
+ 10.1.10.0/24       1        Stub    0.0.0.0         111.111.111.111 0.0.0.0
+ 12.12.12.12/32     1        Stub    10.1.0.8        12.12.12.12     0.0.0.0
+ 10.1.0.0/31        2        Transit 10.1.0.8        12.12.12.12     0.0.0.0
+ 10.1.0.0/31        2        Transit 10.1.0.2        12.12.12.12     0.0.0.0
+ 10.1.0.2/31        1        Transit 0.0.0.0         11.11.11.11     0.0.0.0
+ 10.1.0.4/31        2        Transit 10.1.0.2        11.11.11.11     0.0.0.0
+ 10.1.0.6/31        2        Transit 10.1.0.8        12.12.12.12     0.0.0.0
+ 10.1.0.8/31        1        Transit 0.0.0.0         12.12.12.12     0.0.0.0
+ 112.112.112.112/32 2        Stub    10.1.0.8        112.112.112.112 0.0.0.0
+ 112.112.112.112/32 2        Stub    10.1.0.2        112.112.112.112 0.0.0.0
+ 11.11.11.11/32     1        Stub    10.1.0.2        11.11.11.11     0.0.0.0
+ 10.1.20.0/24       1        Stub    0.0.0.0         111.111.111.111 0.0.0.0
+ 10.1.99.0/24       1        Stub    0.0.0.0         111.111.111.111 0.0.0.0
+ 111.111.111.111/32 0        Stub    0.0.0.0         111.111.111.111 0.0.0.0
+
+ Total nets: 14
+ Intra area: 14  Inter area: 0  ASE: 0  NSSA: 0
+[Reg1-DSW1]disp ospf lsdb
+
+         OSPF Process 1 with Router ID 111.111.111.111
+                 Link State Database
+
+                         Area: 0.0.0.0
+ Type      LinkState ID    AdvRouter       Age  Len   Sequence  Metric
+ Router    111.111.111.111 111.111.111.111 1048 96    80000009  0
+ Router    112.112.112.112 112.112.112.112 1032 96    80000009  0
+ Router    11.11.11.11     11.11.11.11     1063 72    8000001A  0
+ Router    12.12.12.12     12.12.12.12     1069 72    80000011  0
+ Network   10.1.0.8        12.12.12.12     1077 32    80000002  0
+ Network   10.1.0.6        12.12.12.12     1060 32    80000002  0
+ Network   10.1.0.4        11.11.11.11     1059 32    80000002  0
+ Network   10.1.0.2        11.11.11.11     1078 32    80000002  0
+ Network   10.1.0.1        12.12.12.12     1269 32    80000002  0
+
+                 AS External Database
+ Type      LinkState ID    AdvRouter       Age  Len   Sequence  Metric
+ External  12.12.12.12     12.12.12.12     416  36    80000003  1
+ External  11.11.11.11     11.11.11.11     1642 36    80000003  1
+ External  10.1.0.8        12.12.12.12     416  36    80000003  1
+ External  10.1.0.4        11.11.11.11     1642 36    80000003  1
+ External  10.1.0.6        12.12.12.12     416  36    80000003  1
+ External  10.1.0.0        11.11.11.11     1642 36    80000003  1
+ External  10.1.0.0        12.12.12.12     416  36    80000003  1
+ External  10.1.0.2        11.11.11.11     1642 36    80000003  1
+[Reg1-DSW1]disp ospf peer
+
+         OSPF Process 1 with Router ID 111.111.111.111
+               Neighbor Brief Information
+
+ Area: 0.0.0.0
+ Router ID       Address         Pri Dead-Time  State             Interface
+ 11.11.11.11     10.1.0.2        1   32         Full/DR           GE1/0/1
+ 12.12.12.12     10.1.0.8        1   37         Full/DR           GE1/0/2
+```   
+
+Проверка сетевой связности (с VPC пингуются коммутаторы и маршрутизаторы по Loopback-ам):
+```   
+Reg1-VPC1> ping 11.11.11.11
+84 bytes from 11.11.11.11 icmp_seq=1 ttl=254 time=2.000 ms
+84 bytes from 11.11.11.11 icmp_seq=2 ttl=254 time=1.500 ms
+84 bytes from 11.11.11.11 icmp_seq=3 ttl=254 time=3.000 ms
+84 bytes from 11.11.11.11 icmp_seq=4 ttl=254 time=3.000 ms
+84 bytes from 11.11.11.11 icmp_seq=5 ttl=254 time=2.000 ms
+
+Reg1-VPC1> ping 111.111.111.111
+84 bytes from 111.111.111.111 icmp_seq=1 ttl=255 time=4.000 ms
+84 bytes from 111.111.111.111 icmp_seq=2 ttl=255 time=1.500 ms
+84 bytes from 111.111.111.111 icmp_seq=3 ttl=255 time=2.000 ms
+84 bytes from 111.111.111.111 icmp_seq=4 ttl=255 time=1.500 ms
+84 bytes from 111.111.111.111 icmp_seq=5 ttl=255 time=2.000 ms
+
+Reg1-VPC1> ping 12.12.12.12
+84 bytes from 12.12.12.12 icmp_seq=1 ttl=254 time=2.000 ms
+84 bytes from 12.12.12.12 icmp_seq=2 ttl=254 time=2.000 ms
+84 bytes from 12.12.12.12 icmp_seq=3 ttl=254 time=1.500 ms
+84 bytes from 12.12.12.12 icmp_seq=4 ttl=254 time=2.500 ms
+84 bytes from 12.12.12.12 icmp_seq=5 ttl=254 time=2.000 ms
+
+Reg1-VPC1> ping 112.112.112.112
+84 bytes from 112.112.112.112 icmp_seq=1 ttl=255 time=1.500 ms
+84 bytes from 112.112.112.112 icmp_seq=2 ttl=255 time=1.500 ms
+84 bytes from 112.112.112.112 icmp_seq=3 ttl=255 time=1.000 ms
+84 bytes from 112.112.112.112 icmp_seq=4 ttl=255 time=1.000 ms
+84 bytes from 112.112.112.112 icmp_seq=5 ttl=255 time=1.500 ms
+```   
+
+С маршрутизатора пингуется VPC:
+```   
+[Reg1-R1]ping 10.1.10.1
+Ping 10.1.10.1 (10.1.10.1): 56 data bytes, press CTRL+C to break
+56 bytes from 10.1.10.1: icmp_seq=0 ttl=63 time=7.193 ms
+56 bytes from 10.1.10.1: icmp_seq=1 ttl=63 time=2.076 ms
+56 bytes from 10.1.10.1: icmp_seq=2 ttl=63 time=2.008 ms
+56 bytes from 10.1.10.1: icmp_seq=3 ttl=63 time=2.527 ms
+56 bytes from 10.1.10.1: icmp_seq=4 ttl=63 time=2.293 ms
+
+--- Ping statistics for 10.1.10.1 ---
+5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
+round-trip min/avg/max/std-dev = 2.008/3.219/7.193/1.995 ms
+[Reg1-R1]%Oct 12 20:46:47:383 2025 Reg1-R1 PING/6/PING_STATISTICS: Ping statistics for 10.1.10.1: 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss, round-trip min/avg/max/std-dev = 2.008/3.219/7.193/1.995 ms.
+
+```   
+
+
+Конфигурационныe файлы можно найти по [ссылке](./cfg).
 # Протоколы L3 (транспортная сеть)
 
 ```   
