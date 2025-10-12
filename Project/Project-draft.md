@@ -58,7 +58,7 @@ quit
 На Reg1-DSW2 настройка аналогична.
 
 
-## Настройка и проверка VRRP
+## Настройка VRRP
 
 Настройка:
 
@@ -308,7 +308,7 @@ IPv4 Virtual Router Information:
 
 Рассмотрим настройку RSTP (Rapid Spanning-tree Protocol) на примере Региона 2.
 
-Для предотвращения образования петель поднимем на всех коммутаторах региона RSTP с помощью комманды:
+Для предотвращения образования петель поднимем на всех коммутаторах региона RSTP с помощью команды:
 ```   
 stp mode rstp
 stp global enable
@@ -461,7 +461,7 @@ irf-port 2/2
 #
 ...
 ```   
-Видно, что порты на втором коммутаторе стека отображаются как порты виртуальной "второй интерфейсной карты" (_2_/0/XX), как если бы это был коммутатор с несколькими интерфейсными картами.
+Видно, что порты на втором коммутаторе стека отображаются как порты виртуальной "второй интерфейсной карты" (*2*/0/XX), как если бы это был коммутатор с несколькими интерфейсными картами.
 
 Посмотрим, что стало с RSTP:
 
@@ -553,7 +553,7 @@ irf-port 2/2
 
 Стэк развалился, оба коммутатора считают себя главными, в сети два устройства с одинаковым именем.
 
-Нижн диагностика с первого коммутатора стека:
+Ниже диагностика с первого коммутатора стека:
 ```
 <Reg2-DSW>disp irf
 MemberID    Role    Priority  CPU-Mac         Description
@@ -696,10 +696,12 @@ Member 2
 - ARP MAD &mdash; через запрос Gratuitous ARP, с идентификатором активного коммутатора;	
 - ND MAD &mdash; с помощью пакетов NS (протокол Neighbor Discovery IPv6).
 
-У каждого из этих механизмов есть свои преимущества и недостатки. Так, у LACP MAD высокая скорость обнаружения, не требуется дополнительного линка, но требуется промежуточное устройство, работающее по LACP. У BFD MAD также высокая скорость обнаружения, но требуется дополнительный канал между устройствами фабрики IRF. У ARP MAD низкая скорость обнаружения, но не требуются дополнительные устройства и каналы. У ND MAD скорость обнаружения ниже, чем у LACP и BFD MAD, не требуются доп. устройства и каналы, но используются сценарии IPv6.
+У каждого из этих механизмов есть свои преимущества и недостатки. Так, у LACP MAD высокая скорость обнаружения, не требуется дополнительного линка, но требуется промежуточное устройство, работающее по LACP. У BFD MAD также высокая скорость обнаружения, но требуется дополнительный канал между устройствами фабрики IRF. У ARP MAD низкая скорость обнаружения, но не требуются дополнительные устройства и каналы. У ND MAD скорость обнаружения ниже, чем у LACP и BFD MAD, не требуются дополнительные устройства и каналы, но используются сценарии IPv6.
 
-Реализую BFD MAD. Для этого добавлю дополнительный линк между коммутаторами (GE1/0/48 &mdash; GE2/0/48).
+Реализуем BFD MAD. Для этого добавим дополнительный линк между коммутаторами (GE1/0/48 &mdash; GE2/0/48).
 Схема представлена на рисунке:
+
+
 ![Reg2-BFD-MAD.jpg](./img/Reg2-BFD-MAD.jpg)
 
 Настройка:
@@ -717,7 +719,7 @@ int Vlan-interface999
 quit
 
 
-# отключаю STP на портах BFD, т.к. spanning-tree и BFD MAD взаимоисключающие:
+# отключаем STP на портах BFD, т.к. spanning-tree и BFD MAD взаимоисключающие:
 
 int GE1/0/48
  undo stp enable
@@ -759,8 +761,8 @@ MAD BFD enabled interface: Vlan-interface999
   2           192.168.99.2/24      1          Normal
 ```   
 
-Отключу порты стека.
-IRF разделяется, MAD обнаруживает разделение irf, отключает все сетевые порты на втором коммутаторе, второй коммутатор не работает, первый коммутатор работает. Статус сеанса bfd ненадолго изменится с "Down" на "Up", а затем снова изменится на "Down", так что статус сеанса bfd, который мы видим, всегда будет "Down" Статус disp mad изменится с "Normal" на "Faulty".
+Отключаем порты стека.
+IRF разделяется, MAD обнаруживает разделение IRF, отключает все сетевые порты на втором коммутаторе, второй коммутатор не работает, первый коммутатор работает. Статус сеанса BFD ненадолго изменится с "Down" на "Up", а затем снова изменится на "Down", так что статус сеанса BFD, который мы видим, всегда будет "Down". Статус в выводе команды *disp mad* изменится с "Normal" на "Faulty".
 
 ```   
 [Reg2-DSW]disp bfd sess
@@ -793,17 +795,265 @@ MAD BFD enabled interface: Vlan-interface999
 
 ## Настройка M-LAG
 
-В Регионе 3 применю технологию объединения коммутатров M-LAG. Данная технология избавлена от недостатком классического стекирования, т.к. control-plane разнесён между коммутаторами. 
+В Регионе 3 применим технологию объединения коммутатров M-LAG. Данная технология избавлена от
+недостатком классического стекирования, т.к. control-plane разнесён между коммутаторами.
 
-Проверка SVG-картинки:
+Схема представлена на рисунке.
 
 ![MLAG-VRRP.svg](./img/MLAG-VRRP.svg)
 
-Проверка JPG-картинки:
 
-![MLAG-VRRP.jpg](./img/MLAG-VRRP.jpg)
+Настроим M-LAG со стороны Reg3-DSW1, также выполним настройку VRRP:
+
+```   
+
+m-lag system-mac 1-1-1
+m-lag system-number 1
+m-lag system-priority 123
+m-lag keepalive ip destination 111.111.111.112 source 111.111.111.111
+
+int ge1/0/48
+ port link-mode route
+ ip address 111.111.111.111 24
+quit
+
+m-lag mad exclude interface ge1/0/48
+
+int bridge-aggregation 100
+ link-aggregation mode dynamic
+quit
+
+int fge1/0/53
+ port link-aggregation group 100
+quit
+
+int fge1/0/54
+ port link-aggregation group 100
+quit
+
+int bridge-aggregation 100
+ port m-lag peer-link 1
+quit
+
+int bridge-aggregation 101
+ link-aggregation mode dynamic
+ port m-lag group 1
+quit
+
+interface xge1/0/49
+ port link-aggregation group 101
+quit
+
+int bridge-aggregation 102
+ link-aggregation mode dynamic
+ port m-lag group 2
+quit
+
+int xge1/0/50
+ port link-aggregation group 102
+quit
+
+vlan 10
+ description Radio
+quit
+
+vlan 20
+ description Tech
+quit
+
+interface bridge-aggregation 101
+ port link-type trunk
+ port trunk permit vlan 10
+quit
+
+interface bridge-aggregation 102
+ port link-type trunk
+ port trunk permit vlan 20
+quit
+
+interface vlan-interface 10
+ ip address 10.3.10.251 24
+quit
+
+interface vlan-interface 20
+ ip address 10.3.20.251 24
+quit
+
+m-lag mad exclude interface vlan-interface 10
+m-lag mad exclude interface vlan-interface 20
+
+interface vlan-interface 10
+ vrrp vrid 1 virtual-ip 10.3.10.254
+ vrrp vrid 1 priority 200
+quit
+
+interface vlan-interface 20
+ vrrp vrid 2 virtual-ip 10.3.20.254
+ vrrp vrid 2 priority 200
+quit
+```   
+Настройка на Reg3-DSW2 аналогична.
+
+На коммутаторах уровня доступа (на примере Reg3-ASW1) настройки следующие:
+
+```   
+interface bridge-aggregation 101
+ link-aggregation mode dynamic
+quit
+
+interface range xge1/0/49 to xge1/0/50
+ port link-aggregation group 101
+quit
+
+# Create VLAN 10.
+
+vlan 10
+ description Radio
+quit
+
+interface bridge-aggregation 101
+ port link-type trunk
+ port trunk permit vlan 10
+quit
+```   
+
+Проверим, что Reg3-DSW1 сформировал систему M-LAG с Reg3-DSW2:
+
+```   
+[Reg3-DSW1]display m-lag summary
+Flags: A -- Aggregate interface down, B -- No peer M-LAG interface configured
+       C -- Configuration consistency check failed
+
+Peer-link interface: BAGG100
+Peer-link interface state (cause): UP
+Keepalive link state (cause): UP
+
+                     M-LAG interface information
+M-LAG IF    M-LAG group  Local state (cause)  Peer state  Remaining down time(s)
+BAGG101     1            UP                   UP          -
+BAGG102     2            UP                   UP          -
+[Reg3-DSW1]display m-lag verbose
+Flags: A -- Home_Gateway, B -- Neighbor_Gateway, C -- Other_Gateway,
+       D -- PeerLink_Activity, E -- DRCP_Timeout, F -- Gateway_Sync,
+       G -- Port_Sync, H -- Expired
+
+Peer-link interface/Peer-link interface ID: BAGG100/1
+State: UP
+Cause: -
+Local DRCP flags/Peer DRCP flags: ABDFG/ABDFG
+Local Selected ports (index): FGE1/0/53 (54), FGE1/0/54 (55)
+Peer Selected ports indexes: 54, 55
+Reserved VLANs: -
+
+M-LAG interface/M-LAG group ID: BAGG101/1
+Local M-LAG interface state: UP
+Peer M-LAG interface state: UP
+M-LAG group state: UP
+Local M-LAG interface down cause: -
+Remaining M-LAG DOWN time: -
+Local M-LAG interface LACP MAC: Config=N/A, Effective=0001-0001-0001
+Peer M-LAG interface LACP MAC: Config=N/A, Effective=0001-0001-0001
+Local M-LAG interface LACP priority: Config=32768, Effective=123
+Peer M-LAG interface LACP priority: Config=32768, Effective=123
+Local DRCP flags/Peer DRCP flags: ABDFG/ABDFG
+Local Selected ports (index): XGE1/0/49 (50)
+Peer Selected ports indexes: 50
+
+M-LAG interface/M-LAG group ID: BAGG102/2
+Local M-LAG interface state: UP
+Peer M-LAG interface state: UP
+M-LAG group state: UP
+Local M-LAG interface down cause: -
+Remaining M-LAG DOWN time: -
+Local M-LAG interface LACP MAC: Config=N/A, Effective=0001-0001-0001
+Peer M-LAG interface LACP MAC: Config=N/A, Effective=0001-0001-0001
+Local M-LAG interface LACP priority: Config=32768, Effective=123
+Peer M-LAG interface LACP priority: Config=32768, Effective=123
+Local DRCP flags/Peer DRCP flags: ABDFG/ABDFG
+Local Selected ports (index): XGE1/0/50 (51)
+Peer Selected ports indexes: 51
+```   
+
+Проверяем, что Reg3-ASW1 и Reg3-ASW2 корректно сформировали агрегированные соединения с системой M-LAG:
+
+```   
+[Reg3-ASW1]display link-aggregation verbose
+Loadsharing Type: Shar -- Loadsharing, NonS -- Non-Loadsharing
+Port: A -- Auto
+Port Status: S -- Selected, U -- Unselected, I -- Individual
+Flags:  A -- LACP_Activity, B -- LACP_Timeout, C -- Aggregation,
+        D -- Synchronization, E -- Collecting, F -- Distributing,
+        G -- Defaulted, H -- Expired
+
+Aggregate Interface: Bridge-Aggregation101
+Aggregation Mode: Dynamic
+Loadsharing Type: Shar
+System ID: 0x8000, 268f-4241-1e00
+Local:
+  Port                Status  Priority Oper-Key  Flag
+--------------------------------------------------------------------------------
+  XGE1/0/49           S       32768    1         {ACDEF}
+  XGE1/0/50           S       32768    2         {ACDEF}
+Remote:
+  Actor               Priority Index    Oper-Key SystemID               Flag
+--------------------------------------------------------------------------------
+  XGE1/0/49(R)        32768    16386    40001    0x7b  , 0001-0001-0001 {ACDEF}
+  XGE1/0/50           32768    32770    40001    0x7b  , 0001-0001-0001 {ACDEF}
 
 
+
+
+[Reg3-ASW2]display link-aggregation verbose
+Loadsharing Type: Shar -- Loadsharing, NonS -- Non-Loadsharing
+Port: A -- Auto
+Port Status: S -- Selected, U -- Unselected, I -- Individual
+Flags:  A -- LACP_Activity, B -- LACP_Timeout, C -- Aggregation,
+        D -- Synchronization, E -- Collecting, F -- Distributing,
+        G -- Defaulted, H -- Expired
+
+Aggregate Interface: Bridge-Aggregation102
+Aggregation Mode: Dynamic
+Loadsharing Type: Shar
+System ID: 0x8000, 26a5-e3d0-1f00
+Local:
+  Port                Status  Priority Oper-Key  Flag
+--------------------------------------------------------------------------------
+  XGE1/0/49           S       32768    1         {ACDEF}
+  XGE1/0/50           S       32768    2         {ACDEF}
+Remote:
+  Actor               Priority Index    Oper-Key SystemID               Flag
+--------------------------------------------------------------------------------
+  XGE1/0/49(R)        32768    16387    40002    0x7b  , 0001-0001-0001 {ACDEF}
+  XGE1/0/50           32768    32771    40002    0x7b  , 0001-0001-0001 {ACDEF}
+```   
+Конфигурационныe файлы можно найти по [ссылке](./cfg).
+
+
+
+```   
+```   
+
+
+```   
+```   
+
+
+```   
+```   
+
+```   
+```   
+
+
+```   
+```   
+
+
+```   
+```   
+
+
+#### Всякая фигня
 
 Тире:
 
@@ -817,34 +1067,8 @@ Minus Symbol    &minus;
 
 стрелки:
 
-Up arrow (↑): &uarr;
-Down arrow (↓): &darr;
-Left arrow (←): &larr;
-Right arrow (→): &rarr;
-Double headed arrow (↔): &harr;
-
-
-```   
-```   
-
-
-```   
-```   
-
-
-```   
-```   
-
-
-```   
-```   
-
-
-```   
-```   
-
-
-```   
-```   
-
-
+Up arrow (^): &uarr;
+Down arrow (v): &darr;
+Left arrow (<): &larr;
+Right arrow (>): &rarr;
+Double headed arrow (-): &harr;
