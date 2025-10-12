@@ -805,7 +805,12 @@ MAD BFD enabled interface: Vlan-interface999
 
 
 
+Тире:
 
+
+En-Dash         &ndash;    &#150;
+Em-Dash         &mdash;    &#151;
+Minus Symbol    &minus;    &#8722;
 
 ```   
 ```   
