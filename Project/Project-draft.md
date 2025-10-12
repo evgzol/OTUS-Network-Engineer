@@ -814,6 +814,16 @@ Em-Dash         &mdash;
 
 Minus Symbol    &minus;
 
+
+стрелки:
+
+Up arrow (↑): &uarr;
+Down arrow (↓): &darr;
+Left arrow (←): &larr;
+Right arrow (→): &rarr;
+Double headed arrow (↔): &harr;
+
+
 ```   
 ```   
 
