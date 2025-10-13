@@ -48,9 +48,9 @@
 
 # Сетевая топология
 
-Примерная схема топологии приведена на рисунке:
+Топология сети приведена на рисунке:
 
-![Shema-draft.png](./img/Shema-draft.png)
+![2025 Топология OTUS Network Engineer Diploma-H3C.svg](./img/2025 Топология OTUS Network Engineer Diploma-H3C.svg)
 
 
 # План IP адресации
@@ -1094,7 +1094,7 @@ Remote:
 (passive interface default), чтобы не отправлять hello в клиентские порты и вне региона. Применена команда ospf network-type p2p для оптимизации работы протокола.
 
 Схема сети региона представлена на рисунке. 
-![OSPF.svg](./img/OSPF.svg)
+![Region1.svg](./img/Region1.svg)
 
 Таблица OSPF router-id, для простоты совпадает с Loopback-ами:
 
