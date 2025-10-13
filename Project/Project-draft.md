@@ -11,7 +11,7 @@
 	
     5.2. [Настройка VRRP](#Настройка-VRRP)
 	
-    5.3. [Настройка Spanning Tree (RSTP)](#Настройка-Spanning-Tree-(RSTP))
+    5.3. [Настройка Spanning Tree (RSTP)](#Настройка-Spanning-Tree--RSTP-)
    
     5.4. [Объединение коммутаторов в стек](#Объединение-коммутаторов-в-стек)
    
@@ -445,7 +445,7 @@ port group int fge1/0/53
 port group int fge1/0/54
 int range fge1/0/53 fge1/0/54
 
-# задаю приоритет == 32, чтобы данный физический коммутатор был первым в стеке
+# задаём приоритет == 32, чтобы данный физический коммутатор был первым в стеке
 irf member 1 priority 32
 
 
@@ -1527,7 +1527,7 @@ round-trip min/avg/max/std-dev = 2.008/3.219/7.193/1.995 ms
 
 В качестве протокола внутренней маршрутизации на транспортной сети оператора применим протокол IS-IS.
 
-Выбор протокола  обусловлена простотой настройки, масштабируемость, гибкостью при построении сетей операторов, простотой расширения для IPv6.
+Выбор протокола обусловлен простотой настройки, масштабируемостью, гибкостью при построении сетей операторов, простотой расширения для IPv6.
 
 Сконфигурируем IS-IS как level-L1 для взаимодействия в рамках одной общей зоны. Назначим NSAP-адреса для P/PE-маршрутизаторов согласно таблицы:
 | Маршрутизатор| NSAP-адрес   |
@@ -1676,7 +1676,6 @@ Ping 2.2.2.2 (2.2.2.2): 56 data bytes, press CTRL+C to break
 --- Ping statistics for 2.2.2.2 ---
 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
 round-trip min/avg/max/std-dev = 0.472/1.148/3.257/1.058 ms
-[PE1]%Oct 13 19:48:10:195 2025 PE1 PING/6/PING_STATISTICS: Ping statistics for 2.2.2.2: 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss, round-trip min/avg/max/std-dev = 0.472/1.148/3.257/1.058 ms.
 
 [PE1]ping 3.3.3.3
 Ping 3.3.3.3 (3.3.3.3): 56 data bytes, press CTRL+C to break
@@ -1689,7 +1688,6 @@ Ping 3.3.3.3 (3.3.3.3): 56 data bytes, press CTRL+C to break
 --- Ping statistics for 3.3.3.3 ---
 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
 round-trip min/avg/max/std-dev = 0.508/0.850/1.462/0.340 ms
-[PE1]%Oct 13 19:48:15:873 2025 PE1 PING/6/PING_STATISTICS: Ping statistics for 3.3.3.3: 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss, round-trip min/avg/max/std-dev = 0.508/0.850/1.462/0.340 ms.
 
 [PE1]ping 4.4.4.4
 Ping 4.4.4.4 (4.4.4.4): 56 data bytes, press CTRL+C to break
@@ -1702,7 +1700,6 @@ Ping 4.4.4.4 (4.4.4.4): 56 data bytes, press CTRL+C to break
 --- Ping statistics for 4.4.4.4 ---
 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
 round-trip min/avg/max/std-dev = 0.481/0.878/1.778/0.490 ms
-[PE1]%Oct 13 19:48:21:565 2025 PE1 PING/6/PING_STATISTICS: Ping statistics for 4.4.4.4: 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss, round-trip min/avg/max/std-dev = 0.481/0.878/1.778/0.490 ms.
 
 [PE1]
 ```  
@@ -1720,7 +1717,6 @@ Ping 1.1.1.1 (1.1.1.1): 56 data bytes, press CTRL+C to break
 --- Ping statistics for 1.1.1.1 ---
 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
 round-trip min/avg/max/std-dev = 0.457/0.765/1.593/0.430 ms
-[PE3]%Oct 13 19:47:27:808 2025 PE3 PING/6/PING_STATISTICS: Ping statistics for 1.1.1.1: 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss, round-trip min/avg/max/std-dev = 0.457/0.765/1.593/0.430 ms.
 
 [PE3]ping 2.2.2.2
 Ping 2.2.2.2 (2.2.2.2): 56 data bytes, press CTRL+C to break
@@ -1733,7 +1729,6 @@ Ping 2.2.2.2 (2.2.2.2): 56 data bytes, press CTRL+C to break
 --- Ping statistics for 2.2.2.2 ---
 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
 round-trip min/avg/max/std-dev = 0.581/1.175/2.649/0.767 ms
-[PE3]%Oct 13 19:47:33:948 2025 PE3 PING/6/PING_STATISTICS: Ping statistics for 2.2.2.2: 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss, round-trip min/avg/max/std-dev = 0.581/1.175/2.649/0.767 ms.
 
 [PE3]
 [PE3]ping 4.4.4.4
@@ -1747,20 +1742,39 @@ Ping 4.4.4.4 (4.4.4.4): 56 data bytes, press CTRL+C to break
 --- Ping statistics for 4.4.4.4 ---
 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
 round-trip min/avg/max/std-dev = 0.462/0.952/2.417/0.738 ms
-[PE3]%Oct 13 19:47:42:435 2025 PE3 PING/6/PING_STATISTICS: Ping statistics for 4.4.4.4: 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss, round-trip min/avg/max/std-dev = 0.462/0.952/2.417/0.738 ms.
 
 ```   
 
 Конфигурационныe файлы можно найти по [ссылке](./cfg).
 
 ## Настройка eBGP
-текст
+
+Настроим eBGP стыки между регионами и транспортной сетью.
+
+Настройка CE-маршрутизаторов на примере региона 1.
+
+### Регион 1
+
+```   
+```   
+
+Настройка PE-маршрутизаторов транспортной сети.
+
+### Регион 1
+
 ```   
 ```   
 
 
+Диагностика:
 ```   
 ```   
+
+
+Проверка связности:
+```   
+```   
+
 	
 ## Настройка iBGP
 текст
