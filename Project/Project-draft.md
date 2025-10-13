@@ -1190,14 +1190,7 @@ quit
 ```   
 На Reg1-DSW2 настройка аналогична.
 
-Диагностика.
-
-disp ip routing-table
-disp ospf routing
-display ospf peer
-display ospf peer verbose
-disp ospf lsdb
-
+Диагностика протокола приведена ниже.
 
 На маршрутизаторах:
 ```   
@@ -1532,14 +1525,203 @@ round-trip min/avg/max/std-dev = 2.008/3.219/7.193/1.995 ms
 
 ## Настройка IS-IS
 
-текст
+В качестве протокола внутренней маршрутизации на транспортной сети оператора применим протокол IS-IS.
+
+Выбор протокола  обусловлена простотой настройки, масштабируемость, гибкостью при построении сетей операторов, простотой расширения для IPv6.
+
+Сконфигурируем IS-IS как level-L1 для взаимодействия в рамках одной общей зоны. Назначим NSAP-адреса для P/PE-маршрутизаторов согласно таблицы:
+| Маршрутизатор| NSAP-адрес   |
+| --------     | -------     |
+| PE1          | 49.6500.0000.0000.0001.00 |
+| PE2          | 49.6500.0000.0000.0002.00 |
+| PE3          | 49.6500.0000.0000.0003.00 |
+| PE4          | 49.6500.0000.0000.0004.00 |
+
+Где 49 &mdash; указывает тип адреса (приватный), 6500 &mdash; номер зоны, 0000.0000.000**X** &mdash; ID устройства (у нас будет по номеру маршрутизатора), 00 - селектор (всегда ноль).
+
+На интерфейсах настроим isis circuit-type p2p для оптимизации работы протокола.
+Заданы is-name для передачи информации о hostname ISIS соседям в пределах общей зоны.
+На интерфейсах подключения регионов настроим режим isis silent, чтобы не отправлять hello в клиентские порты.
+
+Настройка на примере маршрутизатора PE3:
 ```   
+isis 65000
+ is-level level-1
+ network-entity 49.6500.0000.0000.0003.00
+ is-name PE3
+quit
+
+interface GE0/0/0
+ isis enable 65000
+ isis circuit-type p2p 
+quit
+
+interface GE0/0/1
+ isis enable 65000
+ isis circuit-type p2p 
+quit
+
+interface GE0/0/2
+ isis enable 65000
+ isis circuit-type p2p 
+quit
+
+interface GE0/0/7
+ isis enable 65000
+ isis silent
+quit
+
+interface GE0/0/8
+ isis enable 65000
+ isis silent
+quit
+
+int loopback0
+  isis enable 65000
+quit
 ```   
 
+Для остальных маршрутизаторов настройки аналогичны.
+
+Диагностика протокола на примере PE3 приведена ниже.
+```   
+[PE3]display ip routing-table
+
+Destinations : 20       Routes : 23
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+1.1.1.1/32         IS_L1   15  10          10.0.0.2        GE0/0/1
+2.2.2.2/32         IS_L1   15  10          10.0.0.7        GE0/0/2
+3.3.3.3/32         Direct  0   0           127.0.0.1       Loop0
+4.4.4.4/32         IS_L1   15  10          10.0.0.11       GE0/0/0
+10.0.0.0/31        IS_L1   15  20          10.0.0.2        GE0/0/1
+                   IS_L1   15  20          10.0.0.7        GE0/0/2
+10.0.0.2/31        Direct  0   0           10.0.0.3        GE0/0/1
+10.0.0.3/32        Direct  0   0           127.0.0.1       GE0/0/1
+10.0.0.4/31        IS_L1   15  20          10.0.0.2        GE0/0/1
+                   IS_L1   15  20          10.0.0.11       GE0/0/0
+10.0.0.6/31        Direct  0   0           10.0.0.6        GE0/0/2
+10.0.0.6/32        Direct  0   0           127.0.0.1       GE0/0/2
+10.0.0.8/31        IS_L1   15  20          10.0.0.7        GE0/0/2
+                   IS_L1   15  20          10.0.0.11       GE0/0/0
+10.0.0.10/31       Direct  0   0           10.0.0.10       GE0/0/0
+10.0.0.10/32       Direct  0   0           127.0.0.1       GE0/0/0
+10.0.0.12/31       IS_L1   15  20          10.0.0.2        GE0/0/1
+10.0.0.16/31       Direct  0   0           10.0.0.16       GE0/0/7
+10.0.0.16/32       Direct  0   0           127.0.0.1       GE0/0/7
+127.0.0.0/8        Direct  0   0           127.0.0.1       InLoop0
+127.0.0.1/32       Direct  0   0           127.0.0.1       InLoop0
+127.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+255.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+[PE3]display isis peer
+
+                       Peer information for IS-IS(65000)
+                       ---------------------------------
+
+ System ID: PE4
+ Interface: GE0/0/0                 Circuit Id:  001
+ State: Up     HoldTime: 22s        Type: L1           PRI: --
+
+ System ID: PE1
+ Interface: GE0/0/1                 Circuit Id:  001
+ State: Up     HoldTime: 25s        Type: L1           PRI: --
+
+ System ID: PE2
+ Interface: GE0/0/2                 Circuit Id:  001
+ State: Up     HoldTime: 26s        Type: L1           PRI: --
+```   
+
+Проверка сетевой связности (пинги по Loopback-ам):
+
+С маршрутизатора PE1:
+```  
+[PE1]ping 2.2.2.2
+Ping 2.2.2.2 (2.2.2.2): 56 data bytes, press CTRL+C to break
+56 bytes from 2.2.2.2: icmp_seq=0 ttl=255 time=3.257 ms
+56 bytes from 2.2.2.2: icmp_seq=1 ttl=255 time=0.472 ms
+56 bytes from 2.2.2.2: icmp_seq=2 ttl=255 time=0.620 ms
+56 bytes from 2.2.2.2: icmp_seq=3 ttl=255 time=0.759 ms
+56 bytes from 2.2.2.2: icmp_seq=4 ttl=255 time=0.632 ms
+
+--- Ping statistics for 2.2.2.2 ---
+5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
+round-trip min/avg/max/std-dev = 0.472/1.148/3.257/1.058 ms
+[PE1]%Oct 13 19:48:10:195 2025 PE1 PING/6/PING_STATISTICS: Ping statistics for 2.2.2.2: 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss, round-trip min/avg/max/std-dev = 0.472/1.148/3.257/1.058 ms.
+
+[PE1]ping 3.3.3.3
+Ping 3.3.3.3 (3.3.3.3): 56 data bytes, press CTRL+C to break
+56 bytes from 3.3.3.3: icmp_seq=0 ttl=255 time=1.462 ms
+56 bytes from 3.3.3.3: icmp_seq=1 ttl=255 time=0.690 ms
+56 bytes from 3.3.3.3: icmp_seq=2 ttl=255 time=0.629 ms
+56 bytes from 3.3.3.3: icmp_seq=3 ttl=255 time=0.508 ms
+56 bytes from 3.3.3.3: icmp_seq=4 ttl=255 time=0.960 ms
+
+--- Ping statistics for 3.3.3.3 ---
+5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
+round-trip min/avg/max/std-dev = 0.508/0.850/1.462/0.340 ms
+[PE1]%Oct 13 19:48:15:873 2025 PE1 PING/6/PING_STATISTICS: Ping statistics for 3.3.3.3: 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss, round-trip min/avg/max/std-dev = 0.508/0.850/1.462/0.340 ms.
+
+[PE1]ping 4.4.4.4
+Ping 4.4.4.4 (4.4.4.4): 56 data bytes, press CTRL+C to break
+56 bytes from 4.4.4.4: icmp_seq=0 ttl=255 time=1.013 ms
+56 bytes from 4.4.4.4: icmp_seq=1 ttl=255 time=0.487 ms
+56 bytes from 4.4.4.4: icmp_seq=2 ttl=255 time=0.481 ms
+56 bytes from 4.4.4.4: icmp_seq=3 ttl=255 time=0.631 ms
+56 bytes from 4.4.4.4: icmp_seq=4 ttl=255 time=1.778 ms
+
+--- Ping statistics for 4.4.4.4 ---
+5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
+round-trip min/avg/max/std-dev = 0.481/0.878/1.778/0.490 ms
+[PE1]%Oct 13 19:48:21:565 2025 PE1 PING/6/PING_STATISTICS: Ping statistics for 4.4.4.4: 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss, round-trip min/avg/max/std-dev = 0.481/0.878/1.778/0.490 ms.
+
+[PE1]
+```  
+
+И с маршрутизатора PE3:
+```   
+[PE3]ping 1.1.1.1
+Ping 1.1.1.1 (1.1.1.1): 56 data bytes, press CTRL+C to break
+56 bytes from 1.1.1.1: icmp_seq=0 ttl=255 time=1.593 ms
+56 bytes from 1.1.1.1: icmp_seq=1 ttl=255 time=0.457 ms
+56 bytes from 1.1.1.1: icmp_seq=2 ttl=255 time=0.539 ms
+56 bytes from 1.1.1.1: icmp_seq=3 ttl=255 time=0.459 ms
+56 bytes from 1.1.1.1: icmp_seq=4 ttl=255 time=0.776 ms
+
+--- Ping statistics for 1.1.1.1 ---
+5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
+round-trip min/avg/max/std-dev = 0.457/0.765/1.593/0.430 ms
+[PE3]%Oct 13 19:47:27:808 2025 PE3 PING/6/PING_STATISTICS: Ping statistics for 1.1.1.1: 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss, round-trip min/avg/max/std-dev = 0.457/0.765/1.593/0.430 ms.
+
+[PE3]ping 2.2.2.2
+Ping 2.2.2.2 (2.2.2.2): 56 data bytes, press CTRL+C to break
+56 bytes from 2.2.2.2: icmp_seq=0 ttl=255 time=2.649 ms
+56 bytes from 2.2.2.2: icmp_seq=1 ttl=255 time=0.742 ms
+56 bytes from 2.2.2.2: icmp_seq=2 ttl=255 time=1.204 ms
+56 bytes from 2.2.2.2: icmp_seq=3 ttl=255 time=0.581 ms
+56 bytes from 2.2.2.2: icmp_seq=4 ttl=255 time=0.698 ms
+
+--- Ping statistics for 2.2.2.2 ---
+5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
+round-trip min/avg/max/std-dev = 0.581/1.175/2.649/0.767 ms
+[PE3]%Oct 13 19:47:33:948 2025 PE3 PING/6/PING_STATISTICS: Ping statistics for 2.2.2.2: 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss, round-trip min/avg/max/std-dev = 0.581/1.175/2.649/0.767 ms.
+
+[PE3]
+[PE3]ping 4.4.4.4
+Ping 4.4.4.4 (4.4.4.4): 56 data bytes, press CTRL+C to break
+56 bytes from 4.4.4.4: icmp_seq=0 ttl=255 time=2.417 ms
+56 bytes from 4.4.4.4: icmp_seq=1 ttl=255 time=0.462 ms
+56 bytes from 4.4.4.4: icmp_seq=2 ttl=255 time=0.639 ms
+56 bytes from 4.4.4.4: icmp_seq=3 ttl=255 time=0.733 ms
+56 bytes from 4.4.4.4: icmp_seq=4 ttl=255 time=0.511 ms
+
+--- Ping statistics for 4.4.4.4 ---
+5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
+round-trip min/avg/max/std-dev = 0.462/0.952/2.417/0.738 ms
+[PE3]%Oct 13 19:47:42:435 2025 PE3 PING/6/PING_STATISTICS: Ping statistics for 4.4.4.4: 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss, round-trip min/avg/max/std-dev = 0.462/0.952/2.417/0.738 ms.
 
 ```   
-```   
 
+Конфигурационныe файлы можно найти по [ссылке](./cfg).
 
 ## Настройка eBGP
 текст
