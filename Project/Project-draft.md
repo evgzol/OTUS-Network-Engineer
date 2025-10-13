@@ -1613,6 +1613,36 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 127.0.0.1/32       Direct  0   0           127.0.0.1       InLoop0
 127.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
 255.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+[PE3]
+[PE3]display ip routing-table protocol isis
+
+Summary count : 15
+
+ISIS Routing table status : <Active>
+Summary count : 10
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+1.1.1.1/32         IS_L1   15  10          10.0.0.2        GE0/0/1
+2.2.2.2/32         IS_L1   15  10          10.0.0.7        GE0/0/2
+4.4.4.4/32         IS_L1   15  10          10.0.0.11       GE0/0/0
+10.0.0.0/31        IS_L1   15  20          10.0.0.2        GE0/0/1
+                   IS_L1   15  20          10.0.0.7        GE0/0/2
+10.0.0.4/31        IS_L1   15  20          10.0.0.2        GE0/0/1
+                   IS_L1   15  20          10.0.0.11       GE0/0/0
+10.0.0.8/31        IS_L1   15  20          10.0.0.7        GE0/0/2
+                   IS_L1   15  20          10.0.0.11       GE0/0/0
+10.0.0.12/31       IS_L1   15  20          10.0.0.2        GE0/0/1
+
+ISIS Routing table status : <Inactive>
+Summary count : 5
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+3.3.3.3/32         IS_L1   15  0           0.0.0.0         Loop0
+10.0.0.2/31        IS_L1   15  10          0.0.0.0         GE0/0/1
+10.0.0.6/31        IS_L1   15  10          0.0.0.0         GE0/0/2
+10.0.0.10/31       IS_L1   15  10          0.0.0.0         GE0/0/0
+10.0.0.16/31       IS_L1   15  10          0.0.0.0         GE0/0/7
+[PE3]
 [PE3]display isis peer
 
                        Peer information for IS-IS(65000)
