@@ -23,19 +23,17 @@
    
     5.8. [Настройка OSPF](#Настройка-OSPF)
    
-    5.9. [](#)
-	
 6. [Протоколы L3 (транспортная сеть)](#Протоколы-L3-(транспортная-сеть))
 
-    6.1. [](#)
+    6.1. [Настройка IS-IS](#Настройка-IS-IS)
 
-    6.2. [](#)
+    6.2. [Настройка eBGP](#Настройка-EBGP)
 	
-    6.3. [](#)
+    6.3. [Настройка iBGP](#Настройка-iBGP)
 
-    6.4. [](#)
+    6.4. [Настройка IP/MPLS](#Настройка-IP/MPLS)
 
-    6.5. [](#)
+    6.5. [Настройка TE](#Настройка-TE)
 
 7. [Выводы](#Выводы)
 
@@ -1119,23 +1117,31 @@ ospf 1 router-id 11.11.11.11
  quit
 quit
 
-
-ip route-static 0.0.0.0 0.0.0.0 10.0.0.12
-
 int loopback0
  ospf 1 area 0
+quit
 
 int GE0/1
  ospf 1 area 0
+ ospf network-type p2p
+ ospf timer hello 3
+ ospf timer dead 12
 quit
 
 int GE0/2
  ospf 1 area 0
+ ospf network-type p2p
+ ospf timer hello 3
+ ospf timer dead 12
 quit
 
 int GE5/0
  ospf 1 area 0
+ ospf network-type p2p
+ ospf timer hello 3
+ ospf timer dead 12
 quit
+
 ```   
 
 
@@ -1154,15 +1160,20 @@ quit
 int loopback0
  ip address 111.111.111.111 32
  ospf 1 area 0
+quit
 
 int GE1/0/1
- description to Reg1-R1 (GE0/2)
  ospf 1 area 0
+ ospf network-type p2p
+ ospf timer hello 3
+ ospf timer dead 12
 quit
 
 int GE1/0/2
- description to Reg1-R2 (GE5/0)
  ospf 1 area 0
+ ospf network-type p2p
+ ospf timer hello 3
+ ospf timer dead 12
 quit
 
 interface Vlan-interface10
@@ -1513,10 +1524,60 @@ round-trip min/avg/max/std-dev = 2.008/3.219/7.193/1.995 ms
 [Reg1-R1]%Oct 12 20:46:47:383 2025 Reg1-R1 PING/6/PING_STATISTICS: Ping statistics for 10.1.10.1: 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss, round-trip min/avg/max/std-dev = 2.008/3.219/7.193/1.995 ms.
 
 ```   
-
+Настройка в остальных регионах аналогична.
 
 Конфигурационныe файлы можно найти по [ссылке](./cfg).
+
 # Протоколы L3 (транспортная сеть)
+
+## Настройка IS-IS
+
+текст
+```   
+```   
+
+
+```   
+```   
+
+
+## Настройка eBGP
+текст
+```   
+```   
+
+
+```   
+```   
+	
+## Настройка iBGP
+текст
+```   
+```   
+
+
+```   
+```   
+
+## Настройка IP/MPLS
+текст
+```   
+```   
+
+
+```   
+```   
+
+## Настройка TE
+текст
+```   
+```   
+
+
+```   
+```   
+
+# Выводы
 
 ```   
 ```   
