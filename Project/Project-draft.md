@@ -64,7 +64,9 @@
 
 ## Настройка агрегации линков
 
-На оборудовании H3C агрегация линков называется Bridge-Aggregation Group (BAGG). Настраиваю BAGG100 между DSW-коммутаторами на портах 40GBase, BAGG101 между DSW И ASW на портах 10GBase.
+На оборудовании H3C агрегация линков называется Bridge-Aggregation Group (BAGG) для коммутаторов
+и Router-Aggregation Group (RAGG) для маршрутизаторов. Совместима с Ether-Trunk от Huawei и
+Port-Channel от Cisco. Настраиваю BAGG100 между DSW-коммутаторами на портах 40GBase, BAGG101 между DSW И ASW на портах 10GBase.
 
 Reg1-DSW1:
 ```   
