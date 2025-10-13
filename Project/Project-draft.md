@@ -1093,7 +1093,7 @@ Remote:
 
 Рассмотрим настройку протокола OSPF на примере Региона 1. OSPF поднимаем на маршрутизаторах и коммутаторах уровня ядра/распределения.
 Ввиду наличия всего двух маршрутизаторов и двух L3-коммутаторов в сети, можно ограничиться area 0. Всем устройствам назначены Loopback-интеряейсы.
-Изменены стандартные таймеры OSPF на интерфейсах  Timers: Hello 3, Dead 12 с целью улучшения сходимости протокола. Включен silent-interface all
+Изменены стандартные таймеры OSPF на интерфейсах: Hello == 3, Dead == 12 с целью улучшения сходимости протокола. Включен silent-interface all
 (passive interface default), чтобы не отправлять hello в клиентские порты и вне региона. Применена команда ospf network-type p2p для оптимизации работы протокола.
 
 Схема сети региона представлена на рисунке. 
@@ -1517,8 +1517,6 @@ Ping 10.1.10.1 (10.1.10.1): 56 data bytes, press CTRL+C to break
 --- Ping statistics for 10.1.10.1 ---
 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
 round-trip min/avg/max/std-dev = 2.008/3.219/7.193/1.995 ms
-[Reg1-R1]%Oct 12 20:46:47:383 2025 Reg1-R1 PING/6/PING_STATISTICS: Ping statistics for 10.1.10.1: 5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss, round-trip min/avg/max/std-dev = 2.008/3.219/7.193/1.995 ms.
-
 ```   
 Настройка в остальных регионах аналогична.
 
