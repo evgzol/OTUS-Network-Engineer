@@ -1090,6 +1090,8 @@ Remote:
 
 Рассмотрим настройку протокола OSPF на примере Региона 1. OSPF поднимаем на маршрутизаторах и коммутаторах уровня ядра/распределения.
 Ввиду наличия всего двух маршрутизаторов и двух L3-коммутаторов в сети, можно ограничиться area 0. Всем устройствам назначены Loopback-интеряейсы.
+Изменены стандартные таймеры OSPF на интерфейсах  Timers: Hello 3, Dead 12 с целью улучшения сходимости протокола. Включен silent-interface all
+(passive interface default), чтобы не отправлять hello в клиентские порты и вне региона. Применена команда ospf network-type p2p для оптимизации работы протокола.
 
 Схема сети региона представлена на рисунке. 
 ![OSPF.svg](./img/OSPF.svg)
@@ -1175,7 +1177,14 @@ quit
 ```   
 На Reg1-DSW2 настройка аналогична.
 
-Проверка.
+Диагностика.
+
+disp ip routing-table
+disp ospf routing
+display ospf peer
+display ospf peer verbose
+disp ospf lsdb
+
 
 На маршрутизаторах:
 ```   
@@ -1211,6 +1220,7 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 224.0.0.0/4        Direct  0   0           0.0.0.0         NULL0
 224.0.0.0/24       Direct  0   0           0.0.0.0         NULL0
 255.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+[Reg1-R1]
 [Reg1-R1]disp ospf routing
 
          OSPF Process 1 with Router ID 11.11.11.11
@@ -1218,9 +1228,9 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 
  Routing for network
  Destination        Cost     Type    NextHop         AdvRouter       Area
- 10.1.0.2/31        1        Transit 0.0.0.0         11.11.11.11     0.0.0.0
+ 10.1.0.2/31        1        Stub    0.0.0.0         11.11.11.11     0.0.0.0
  112.112.112.112/32 1        Stub    10.1.0.5        112.112.112.112 0.0.0.0
- 10.1.0.4/31        1        Transit 0.0.0.0         11.11.11.11     0.0.0.0
+ 10.1.0.4/31        1        Stub    0.0.0.0         11.11.11.11     0.0.0.0
  10.1.20.0/24       2        Stub    10.1.0.3        111.111.111.111 0.0.0.0
  10.1.20.0/24       2        Stub    10.1.0.5        112.112.112.112 0.0.0.0
  10.1.10.0/24       2        Stub    10.1.0.3        111.111.111.111 0.0.0.0
@@ -1229,15 +1239,70 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
  10.1.99.0/24       2        Stub    10.1.0.3        111.111.111.111 0.0.0.0
  10.1.99.0/24       2        Stub    10.1.0.5        112.112.112.112 0.0.0.0
  11.11.11.11/32     0        Stub    0.0.0.0         11.11.11.11     0.0.0.0
- 10.1.0.8/31        2        Transit 10.1.0.1        12.12.12.12     0.0.0.0
- 10.1.0.8/31        2        Transit 10.1.0.3        12.12.12.12     0.0.0.0
- 10.1.0.6/31        2        Transit 10.1.0.1        12.12.12.12     0.0.0.0
- 10.1.0.6/31        2        Transit 10.1.0.5        12.12.12.12     0.0.0.0
- 10.1.0.0/31        1        Transit 0.0.0.0         12.12.12.12     0.0.0.0
+ 10.1.0.8/31        2        Stub    10.1.0.1        12.12.12.12     0.0.0.0
+ 10.1.0.8/31        2        Stub    10.1.0.3        111.111.111.111 0.0.0.0
+ 10.1.0.6/31        2        Stub    10.1.0.1        12.12.12.12     0.0.0.0
+ 10.1.0.6/31        2        Stub    10.1.0.5        112.112.112.112 0.0.0.0
+ 10.1.0.0/31        1        Stub    0.0.0.0         11.11.11.11     0.0.0.0
  12.12.12.12/32     1        Stub    10.1.0.1        12.12.12.12     0.0.0.0
 
  Total nets: 17
  Intra area: 17  Inter area: 0  ASE: 0  NSSA: 0
+[Reg1-R1]disp ospf peer
+
+         OSPF Process 1 with Router ID 11.11.11.11
+               Neighbor Brief Information
+
+ Area: 0.0.0.0
+ Router ID       Address         Pri Dead-Time  State             Interface
+ 12.12.12.12     10.1.0.1        1   10         Full/ -           GE0/1
+ 111.111.111.111 10.1.0.3        1   10         Full/ -           GE0/2
+ 112.112.112.112 10.1.0.5        1   11         Full/ -           GE5/0
+[Reg1-R1]disp ospf peer verbose
+
+         OSPF Process 1 with Router ID 11.11.11.11
+                 Neighbors
+
+ Area 0.0.0.0 interface 10.1.0.0(GigabitEthernet0/1)'s neighbors
+ Router ID: 12.12.12.12      Address: 10.1.0.1         GR State: Normal
+   State: Full  Mode: Nbr is master  Priority: 1
+   DR: None   BDR: None   MTU: 0
+   Options is 0x42 (-|O|-|-|-|-|E|-)
+   Dead timer due in 9   sec
+   Neighbor is up for 00:01:36
+   Authentication Sequence: [ 0 ]
+   Neighbor state change count: 5
+   BFD status: Disabled
+
+ Area 0.0.0.0 interface 10.1.0.2(GigabitEthernet0/2)'s neighbors
+ Router ID: 111.111.111.111  Address: 10.1.0.3         GR State: Normal
+   State: Full  Mode: Nbr is master  Priority: 1
+   DR: None   BDR: None   MTU: 0
+   Options is 0x42 (-|O|-|-|-|-|E|-)
+   Dead timer due in 9   sec
+   Neighbor is up for 00:00:57
+   Authentication Sequence: [ 0 ]
+   Neighbor state change count: 5
+   BFD status: Disabled
+
+ Area 0.0.0.0 interface 10.1.0.4(GigabitEthernet5/0)'s neighbors
+ Router ID: 112.112.112.112  Address: 10.1.0.5         GR State: Normal
+   State: Full  Mode: Nbr is master  Priority: 1
+   DR: None   BDR: None   MTU: 0
+   Options is 0x42 (-|O|-|-|-|-|E|-)
+   Dead timer due in 10  sec
+   Neighbor is up for 00:00:51
+   Authentication Sequence: [ 0 ]
+   Neighbor state change count: 5
+   BFD status: Disabled
+
+ Last Neighbor Down Event:
+ Router ID: 112.112.112.112
+ Local Address: 10.1.0.4
+ Remote Address: 10.1.0.5
+ Time: Oct 13 05:55:32 2025
+ Reason: Ospf Interface Parameters Changed
+
 [Reg1-R1]disp ospf lsdb
 
          OSPF Process 1 with Router ID 11.11.11.11
@@ -1245,36 +1310,21 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 
                          Area: 0.0.0.0
  Type      LinkState ID    AdvRouter       Age  Len   Sequence  Metric
- Router    111.111.111.111 111.111.111.111 759  96    80000009  0
- Router    112.112.112.112 112.112.112.112 741  96    80000009  0
- Router    11.11.11.11     11.11.11.11     770  72    8000001A  0
- Router    12.12.12.12     12.12.12.12     780  72    80000011  0
- Network   10.1.0.8        12.12.12.12     788  32    80000002  0
- Network   10.1.0.6        12.12.12.12     770  32    80000002  0
- Network   10.1.0.4        11.11.11.11     768  32    80000002  0
- Network   10.1.0.2        11.11.11.11     788  32    80000002  0
- Network   10.1.0.1        12.12.12.12     978  32    80000002  0
+ Router    111.111.111.111 111.111.111.111 73   120   80000023  0
+ Router    112.112.112.112 112.112.112.112 68   120   80000023  0
+ Router    11.11.11.11     11.11.11.11     66   108   80000033  0
+ Router    12.12.12.12     12.12.12.12     67   108   8000002B  0
 
                  AS External Database
  Type      LinkState ID    AdvRouter       Age  Len   Sequence  Metric
- External  11.11.11.11     11.11.11.11     1350 36    80000003  1
- External  10.1.0.4        11.11.11.11     1350 36    80000003  1
- External  10.1.0.0        11.11.11.11     1350 36    80000003  1
- External  10.1.0.2        11.11.11.11     1350 36    80000003  1
- External  12.12.12.12     12.12.12.12     128  36    80000003  1
- External  10.1.0.8        12.12.12.12     128  36    80000003  1
- External  10.1.0.6        12.12.12.12     128  36    80000003  1
- External  10.1.0.0        12.12.12.12     128  36    80000003  1
- [Reg1-R1]disp ospf peer
-
-         OSPF Process 1 with Router ID 11.11.11.11
-               Neighbor Brief Information
-
- Area: 0.0.0.0
- Router ID       Address         Pri Dead-Time  State             Interface
- 12.12.12.12     10.1.0.1        1   34         Full/DR           GE0/1
- 111.111.111.111 10.1.0.3        1   32         Full/BDR          GE0/2
- 112.112.112.112 10.1.0.5        1   40         Full/BDR          GE5/0
+ External  11.11.11.11     11.11.11.11     995  36    80000017  1
+ External  10.1.0.4        11.11.11.11     995  36    80000017  1
+ External  10.1.0.0        11.11.11.11     995  36    80000017  1
+ External  10.1.0.2        11.11.11.11     995  36    80000017  1
+ External  12.12.12.12     12.12.12.12     1439 36    80000016  1
+ External  10.1.0.8        12.12.12.12     1439 36    80000016  1
+ External  10.1.0.6        12.12.12.12     1439 36    80000016  1
+ External  10.1.0.0        12.12.12.12     1439 36    80000016  1
 
 ```   
 На коммутаторах:
@@ -1329,14 +1379,14 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
  Destination        Cost     Type    NextHop         AdvRouter       Area
  10.1.10.0/24       1        Stub    0.0.0.0         111.111.111.111 0.0.0.0
  12.12.12.12/32     1        Stub    10.1.0.8        12.12.12.12     0.0.0.0
- 10.1.0.0/31        2        Transit 10.1.0.8        12.12.12.12     0.0.0.0
- 10.1.0.0/31        2        Transit 10.1.0.2        12.12.12.12     0.0.0.0
- 10.1.0.2/31        1        Transit 0.0.0.0         11.11.11.11     0.0.0.0
- 10.1.0.4/31        2        Transit 10.1.0.2        11.11.11.11     0.0.0.0
- 10.1.0.6/31        2        Transit 10.1.0.8        12.12.12.12     0.0.0.0
- 10.1.0.8/31        1        Transit 0.0.0.0         12.12.12.12     0.0.0.0
- 112.112.112.112/32 2        Stub    10.1.0.8        112.112.112.112 0.0.0.0
+ 10.1.0.0/31        2        Stub    10.1.0.2        11.11.11.11     0.0.0.0
+ 10.1.0.0/31        2        Stub    10.1.0.8        12.12.12.12     0.0.0.0
+ 10.1.0.2/31        1        Stub    0.0.0.0         111.111.111.111 0.0.0.0
+ 10.1.0.4/31        2        Stub    10.1.0.2        11.11.11.11     0.0.0.0
+ 10.1.0.6/31        2        Stub    10.1.0.8        12.12.12.12     0.0.0.0
+ 10.1.0.8/31        1        Stub    0.0.0.0         111.111.111.111 0.0.0.0
  112.112.112.112/32 2        Stub    10.1.0.2        112.112.112.112 0.0.0.0
+ 112.112.112.112/32 2        Stub    10.1.0.8        112.112.112.112 0.0.0.0
  11.11.11.11/32     1        Stub    10.1.0.2        11.11.11.11     0.0.0.0
  10.1.20.0/24       1        Stub    0.0.0.0         111.111.111.111 0.0.0.0
  10.1.99.0/24       1        Stub    0.0.0.0         111.111.111.111 0.0.0.0
@@ -1344,33 +1394,6 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 
  Total nets: 14
  Intra area: 14  Inter area: 0  ASE: 0  NSSA: 0
-[Reg1-DSW1]disp ospf lsdb
-
-         OSPF Process 1 with Router ID 111.111.111.111
-                 Link State Database
-
-                         Area: 0.0.0.0
- Type      LinkState ID    AdvRouter       Age  Len   Sequence  Metric
- Router    111.111.111.111 111.111.111.111 1048 96    80000009  0
- Router    112.112.112.112 112.112.112.112 1032 96    80000009  0
- Router    11.11.11.11     11.11.11.11     1063 72    8000001A  0
- Router    12.12.12.12     12.12.12.12     1069 72    80000011  0
- Network   10.1.0.8        12.12.12.12     1077 32    80000002  0
- Network   10.1.0.6        12.12.12.12     1060 32    80000002  0
- Network   10.1.0.4        11.11.11.11     1059 32    80000002  0
- Network   10.1.0.2        11.11.11.11     1078 32    80000002  0
- Network   10.1.0.1        12.12.12.12     1269 32    80000002  0
-
-                 AS External Database
- Type      LinkState ID    AdvRouter       Age  Len   Sequence  Metric
- External  12.12.12.12     12.12.12.12     416  36    80000003  1
- External  11.11.11.11     11.11.11.11     1642 36    80000003  1
- External  10.1.0.8        12.12.12.12     416  36    80000003  1
- External  10.1.0.4        11.11.11.11     1642 36    80000003  1
- External  10.1.0.6        12.12.12.12     416  36    80000003  1
- External  10.1.0.0        11.11.11.11     1642 36    80000003  1
- External  10.1.0.0        12.12.12.12     416  36    80000003  1
- External  10.1.0.2        11.11.11.11     1642 36    80000003  1
 [Reg1-DSW1]disp ospf peer
 
          OSPF Process 1 with Router ID 111.111.111.111
@@ -1378,8 +1401,67 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 
  Area: 0.0.0.0
  Router ID       Address         Pri Dead-Time  State             Interface
- 11.11.11.11     10.1.0.2        1   32         Full/DR           GE1/0/1
- 12.12.12.12     10.1.0.8        1   37         Full/DR           GE1/0/2
+ 11.11.11.11     10.1.0.2        1   11         Full/ -           GE1/0/1
+ 12.12.12.12     10.1.0.8        1   9          Full/ -           GE1/0/2
+[Reg1-DSW1]disp ospf peer verbose
+
+         OSPF Process 1 with Router ID 111.111.111.111
+                 Neighbors
+
+
+ Area 0.0.0.0 interface 10.1.0.3(GigabitEthernet1/0/1)'s neighbors
+ Router ID: 11.11.11.11      Address: 10.1.0.2         GR state: Normal
+   State: Full  Mode: Nbr is slave  Priority: 1
+   DR: None   BDR: None   MTU: 0
+   Options is 0x42 (-|O|-|-|-|-|E|-)
+   Dead timer due in 9   sec
+   Neighbor is up for 00:03:17
+   Authentication sequence: [ 0 ]
+   Neighbor state change count: 5
+   BFD status: Disabled
+
+
+ Area 0.0.0.0 interface 10.1.0.9(GigabitEthernet1/0/2)'s neighbors
+ Router ID: 12.12.12.12      Address: 10.1.0.8         GR state: Normal
+   State: Full  Mode: Nbr is slave  Priority: 1
+   DR: None   BDR: None   MTU: 0
+   Options is 0x42 (-|O|-|-|-|-|E|-)
+   Dead timer due in 11  sec
+   Neighbor is up for 00:03:17
+   Authentication sequence: [ 0 ]
+   Neighbor state change count: 5
+   BFD status: Disabled
+
+ Last Neighbor Down Event:
+ Router ID: 12.12.12.12
+ Local Address: 10.1.0.9
+ Remote Address: 10.1.0.8
+ Time: Oct 13 05:57:07 2025
+ Reason: Ospf Interface Parameters Changed
+
+[Reg1-DSW1]disp ospf lsdb
+
+         OSPF Process 1 with Router ID 111.111.111.111
+                 Link State Database
+
+                         Area: 0.0.0.0
+ Type      LinkState ID    AdvRouter       Age  Len   Sequence  Metric
+ Router    111.111.111.111 111.111.111.111 202  120   80000023  0
+ Router    112.112.112.112 112.112.112.112 198  120   80000023  0
+ Router    11.11.11.11     11.11.11.11     197  108   80000033  0
+ Router    12.12.12.12     12.12.12.12     197  108   8000002B  0
+
+                 AS External Database
+ Type      LinkState ID    AdvRouter       Age  Len   Sequence  Metric
+ External  12.12.12.12     12.12.12.12     1571 36    80000016  1
+ External  11.11.11.11     11.11.11.11     1128 36    80000017  1
+ External  10.1.0.8        12.12.12.12     1571 36    80000016  1
+ External  10.1.0.4        11.11.11.11     1128 36    80000017  1
+ External  10.1.0.6        12.12.12.12     1571 36    80000016  1
+ External  10.1.0.0        11.11.11.11     1128 36    80000017  1
+ External  10.1.0.0        12.12.12.12     1571 36    80000016  1
+ External  10.1.0.2        11.11.11.11     1128 36    80000017  1
+
 ```   
 
 Проверка сетевой связности (с VPC пингуются коммутаторы и маршрутизаторы по Loopback-ам):
