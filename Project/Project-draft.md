@@ -50,7 +50,7 @@
 
 Топология сети приведена на рисунке:
 
-![2025 Топология OTUS Network Engineer Diploma-H3C.svg](./img/2025 Топология OTUS Network Engineer Diploma-H3C.svg)
+![Topology.svg](./img/Topology.svg)
 
 
 # План IP адресации
