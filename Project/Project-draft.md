@@ -1788,31 +1788,718 @@ round-trip min/avg/max/std-dev = 0.462/0.952/2.417/0.738 ms
 
 Настроим eBGP стыки между регионами и транспортной сетью.
 
-Настройка CE-маршрутизаторов на примере региона 1.
-
-#### Регион 1
-
-```   
-```   
-
 Настройка PE-маршрутизаторов транспортной сети.
 
-#### Регион 1
-
+PE1:
 ```   
+bgp 65000
+ router-id 1.1.1.1
+ peer 10.0.0.13 as-number 65001
+ peer 10.0.0.13 description Reg1-R1
+  address-family ipv4 unicast
+  peer 10.0.0.13 enable
+  network 1.1.1.1 32
+  network 10.0.0.12 31
+ quit
+quit
+```   
+
+PE2:
+```   
+bgp 65000
+ router-id 2.2.2.2
+ peer 10.0.0.15 as-number 65002
+ peer 10.0.0.15 description Reg2-R1
+  address-family ipv4 unicast
+  peer 10.0.0.15 enable
+  network 2.2.2.2 32
+  network 10.0.0.14 31
+ quit
+quit
+```
+   
+PE3:
+```   
+bgp 65000
+ router-id 3.3.3.3
+ peer 10.0.0.17 as-number 65001
+ peer 10.0.0.17 description Reg1-R2
+ peer 10.0.0.21 as-number 65003
+ peer 10.0.0.21 description Reg3-R1
+ address-family ipv4 unicast
+  peer 10.0.0.17 enable
+  peer 10.0.0.21 enable
+  network 3.3.3.3 32
+  network 10.0.0.16 31
+  network 10.0.0.20 31
+ quit
+quit
+```   
+
+PE4:
+```   
+bgp 65000
+ router-id 4.4.4.4
+ peer 10.0.0.19 as-number 65002
+ peer 10.0.0.19 description Reg2-R2
+ peer 10.0.0.23 as-number 65003
+ peer 10.0.0.23 description Reg3-R2
+ address-family ipv4 unicast
+  peer 10.0.0.19 enable
+  peer 10.0.0.23 enable
+  network 4.4.4.4 32
+  network 10.0.0.18 31
+  network 10.0.0.22 31
+ quit
+quit
+```   
+
+Настройка CE-маршрутизаторов на примере региона 1.
+
+
+Reg1-R1:
+```   
+bgp 65001
+ router-id 11.11.11.11
+ peer 10.0.0.12 as-number 65000
+ peer 10.0.0.12 description PE1
+  address-family ipv4 unicast
+  peer 10.0.0.12 enable
+  network 11.11.11.11 32
+  network 10.0.0.12 31
+ quit
+quit
+```   
+
+Reg1-R2:
+```   
+bgp 65001
+ router-id 12.12.12.12
+ peer 10.0.0.16 as-number 65000
+ peer 10.0.0.16 description PE3
+  address-family ipv4 unicast
+  peer 10.0.0.16 enable
+  network 12.12.12.12 32
+  network 10.0.0.16 31
+ quit
+quit
 ```   
 
 
 Диагностика:
+
+PE1:
 ```   
+[PE1]display ip routing-table
+
+Destinations : 25       Routes : 28
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+1.1.1.1/32         Direct  0   0           127.0.0.1       Loop0
+2.2.2.2/32         IS_L1   15  10          10.0.0.1        GE0/0/0
+3.3.3.3/32         IS_L1   15  10          10.0.0.3        GE0/0/1
+4.4.4.4/32         IS_L1   15  10          10.0.0.5        GE0/0/2
+10.0.0.0/31        Direct  0   0           10.0.0.0        GE0/0/0
+10.0.0.0/32        Direct  0   0           127.0.0.1       GE0/0/0
+10.0.0.2/31        Direct  0   0           10.0.0.2        GE0/0/1
+10.0.0.2/32        Direct  0   0           127.0.0.1       GE0/0/1
+10.0.0.4/31        Direct  0   0           10.0.0.4        GE0/0/2
+10.0.0.4/32        Direct  0   0           127.0.0.1       GE0/0/2
+10.0.0.6/31        IS_L1   15  20          10.0.0.1        GE0/0/0
+                   IS_L1   15  20          10.0.0.3        GE0/0/1
+10.0.0.8/31        IS_L1   15  20          10.0.0.1        GE0/0/0
+                   IS_L1   15  20          10.0.0.5        GE0/0/2
+10.0.0.10/31       IS_L1   15  20          10.0.0.3        GE0/0/1
+                   IS_L1   15  20          10.0.0.5        GE0/0/2
+10.0.0.12/31       Direct  0   0           10.0.0.12       GE0/0/7
+10.0.0.12/32       Direct  0   0           127.0.0.1       GE0/0/7
+10.0.0.14/31       IS_L1   15  20          10.0.0.1        GE0/0/0
+10.0.0.16/31       IS_L1   15  20          10.0.0.3        GE0/0/1
+10.0.0.18/31       IS_L1   15  20          10.0.0.5        GE0/0/2
+10.0.0.20/31       IS_L1   15  20          10.0.0.3        GE0/0/1
+10.0.0.22/31       IS_L1   15  20          10.0.0.5        GE0/0/2
+11.11.11.11/32     BGP     255 0           10.0.0.13       GE0/0/7
+127.0.0.0/8        Direct  0   0           127.0.0.1       InLoop0
+127.0.0.1/32       Direct  0   0           127.0.0.1       InLoop0
+127.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+255.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+[PE1]
+[PE1]display ip routing-table protocol bgp
+
+Summary count : 1
+
+BGP Routing table status : <Active>
+Summary count : 1
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+11.11.11.11/32     BGP     255 0           10.0.0.13       GE0/0/7
+
+BGP Routing table status : <Inactive>
+Summary count : 0
+[PE1]disp bgp peer ipv4
+
+ BGP local router ID: 1.1.1.1
+ Local AS number: 65000
+ Total number of peers: 1                 Peers in established state: 1
+
+ * - Dynamically created peer
+ Peer                    AS  MsgRcvd  MsgSent OutQ  PrefRcv Up/Down  State
+
+ 10.0.0.13            65001       21       22    0        2 00:14:17 Established
+[PE1]disp bgp peer ipv4 verbose
+
+        Peer: 10.0.0.13 Local: 1.1.1.1
+        Type: EBGP link
+        Peer's description: "Reg1-R1"
+        BGP version 4, remote router ID 11.11.11.11
+        Update group ID: 0
+        BGP current state: Established, Up for 00h14m22s
+        BGP current event: RecvKeepalive
+        BGP last state: OpenConfirm
+        Port:  Local - 179      Remote - 52160
+        Configured: Active Hold Time: 180 sec   Keepalive Time: 60 sec
+        Received  : Active Hold Time: 180 sec
+        Negotiated: Active Hold Time: 180 sec   Keepalive Time: 60 sec
+        Peer optional capabilities:
+        Peer supports BGP multi-protocol extension
+        Peer supports BGP route refresh capability
+        Peer supports BGP route AS4 capability
+        Address family IPv4 Unicast: advertised and received
+
+ InQ updates: 0, OutQ updates: 0
+ NLRI statistics:
+        Rcvd:   UnReach NLRI          0,      Reach NLRI          2
+        Sent:   UnReach NLRI          0,      Reach NLRI          2
+
+ Message statistics:
+ Msg type     Last rcvd time/      Current rcvd count/      History rcvd count/
+              Last sent time       Current sent count       History sent count
+ Open         20:15:45-2025.10.14  1                        1
+              20:15:45-2025.10.14  1                        1
+ Update       20:15:46-2025.10.14  4                        4
+              20:15:45-2025.10.14  3                        3
+ Notification -                    0                        0
+              -                    0                        0
+ Keepalive    20:29:48-2025.10.14  16                       16
+              20:29:31-2025.10.14  18                       18
+ RouteRefresh -                    0                        0
+              -                    0                        0
+ Total        -                    21                       21
+              -                    22                       22
+
+ Maximum allowed prefix number: 4294967295
+ Threshold: 75%
+ Authentication type configured: None
+ Minimum time between advertisements is 30 seconds
+ Optional capabilities:
+  Multi-protocol extended capability has been enabled
+  Route refresh capability has been enabled
+  Extended nexthop encoding has been enabled
+ Peer preferred value: 0
+ Site-of-Origin: Not specified
+ Routing policy configured:
+ No routing policy is configured
+[PE1]
+```   
+
+PE4:
+```   
+[PE4]display ip routing-table
+
+Destinations : 27       Routes : 30
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+1.1.1.1/32         IS_L1   15  10          10.0.0.4        GE0/0/2
+2.2.2.2/32         IS_L1   15  10          10.0.0.8        GE0/0/1
+3.3.3.3/32         IS_L1   15  10          10.0.0.10       GE0/0/0
+4.4.4.4/32         Direct  0   0           127.0.0.1       Loop0
+10.0.0.0/31        IS_L1   15  20          10.0.0.4        GE0/0/2
+                   IS_L1   15  20          10.0.0.8        GE0/0/1
+10.0.0.2/31        IS_L1   15  20          10.0.0.4        GE0/0/2
+                   IS_L1   15  20          10.0.0.10       GE0/0/0
+10.0.0.4/31        Direct  0   0           10.0.0.5        GE0/0/2
+10.0.0.5/32        Direct  0   0           127.0.0.1       GE0/0/2
+10.0.0.6/31        IS_L1   15  20          10.0.0.8        GE0/0/1
+                   IS_L1   15  20          10.0.0.10       GE0/0/0
+10.0.0.8/31        Direct  0   0           10.0.0.9        GE0/0/1
+10.0.0.9/32        Direct  0   0           127.0.0.1       GE0/0/1
+10.0.0.10/31       Direct  0   0           10.0.0.11       GE0/0/0
+10.0.0.11/32       Direct  0   0           127.0.0.1       GE0/0/0
+10.0.0.12/31       IS_L1   15  20          10.0.0.4        GE0/0/2
+10.0.0.14/31       IS_L1   15  20          10.0.0.8        GE0/0/1
+10.0.0.16/31       IS_L1   15  20          10.0.0.10       GE0/0/0
+10.0.0.18/31       Direct  0   0           10.0.0.18       GE0/0/7
+10.0.0.18/32       Direct  0   0           127.0.0.1       GE0/0/7
+10.0.0.20/31       IS_L1   15  20          10.0.0.10       GE0/0/0
+10.0.0.22/31       Direct  0   0           10.0.0.22       GE0/0/8
+10.0.0.22/32       Direct  0   0           127.0.0.1       GE0/0/8
+22.22.22.22/32     BGP     255 0           10.0.0.19       GE0/0/7
+32.32.32.32/32     BGP     255 0           10.0.0.23       GE0/0/8
+127.0.0.0/8        Direct  0   0           127.0.0.1       InLoop0
+127.0.0.1/32       Direct  0   0           127.0.0.1       InLoop0
+127.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+255.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+[PE4]
+[PE4]display ip routing-table protocol bgp
+
+Summary count : 2
+
+BGP Routing table status : <Active>
+Summary count : 2
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+22.22.22.22/32     BGP     255 0           10.0.0.19       GE0/0/7
+32.32.32.32/32     BGP     255 0           10.0.0.23       GE0/0/8
+
+BGP Routing table status : <Inactive>
+Summary count : 0
+[PE4]
+[PE4]disp bgp peer ipv4
+
+ BGP local router ID: 4.4.4.4
+ Local AS number: 65000
+ Total number of peers: 2                 Peers in established state: 2
+
+ * - Dynamically created peer
+ Peer                    AS  MsgRcvd  MsgSent OutQ  PrefRcv Up/Down  State
+
+ 10.0.0.19            65002       13       16    0        2 00:07:52 Established
+ 10.0.0.23            65003       11       18    0        2 00:05:28 Established
+[PE4]
+[PE4]disp bgp peer ipv4 verbose
+
+        Peer: 10.0.0.19 Local: 4.4.4.4
+        Type: EBGP link
+        Peer's description: "Reg2-R2"
+        BGP version 4, remote router ID 22.22.22.22
+        Update group ID: 0
+        BGP current state: Established, Up for 00h07m56s
+        BGP current event: KATimerExpired
+        BGP last state: OpenConfirm
+        Port:  Local - 179      Remote - 19584
+        Configured: Active Hold Time: 180 sec   Keepalive Time: 60 sec
+        Received  : Active Hold Time: 180 sec
+        Negotiated: Active Hold Time: 180 sec   Keepalive Time: 60 sec
+        Peer optional capabilities:
+        Peer supports BGP multi-protocol extension
+        Peer supports BGP route refresh capability
+        Peer supports BGP route AS4 capability
+        Address family IPv4 Unicast: advertised and received
+
+ InQ updates: 0, OutQ updates: 0
+ NLRI statistics:
+        Rcvd:   UnReach NLRI          0,      Reach NLRI          2
+        Sent:   UnReach NLRI          0,      Reach NLRI          4
+
+ Message statistics:
+ Msg type     Last rcvd time/      Current rcvd count/      History rcvd count/
+              Last sent time       Current sent count       History sent count
+ Open         20:23:28-2025.10.14  1                        1
+              20:23:28-2025.10.14  1                        1
+ Update       20:23:29-2025.10.14  3                        3
+              20:25:51-2025.10.14  5                        5
+ Notification -                    0                        0
+              -                    0                        0
+ Keepalive    20:30:41-2025.10.14  9                        9
+              20:31:02-2025.10.14  10                       10
+ RouteRefresh -                    0                        0
+              -                    0                        0
+ Total        -                    13                       13
+              -                    16                       16
+
+ Maximum allowed prefix number: 4294967295
+ Threshold: 75%
+ Authentication type configured: None
+ Minimum time between advertisements is 30 seconds
+ Optional capabilities:
+  Multi-protocol extended capability has been enabled
+  Route refresh capability has been enabled
+  Extended nexthop encoding has been enabled
+ Peer preferred value: 0
+ Site-of-Origin: Not specified
+ Routing policy configured:
+ No routing policy is configured
+
+        Peer: 10.0.0.23 Local: 4.4.4.4
+        Type: EBGP link
+        Peer's description: "Reg3-R2"
+        BGP version 4, remote router ID 32.32.32.32
+        Update group ID: 0
+        BGP current state: Established, Up for 00h05m32s
+        BGP current event: RecvKeepalive
+        BGP last state: OpenConfirm
+        Port:  Local - 179      Remote - 26432
+        Configured: Active Hold Time: 180 sec   Keepalive Time: 60 sec
+        Received  : Active Hold Time: 180 sec
+        Negotiated: Active Hold Time: 180 sec   Keepalive Time: 60 sec
+        Peer optional capabilities:
+        Peer supports BGP multi-protocol extension
+        Peer supports BGP route refresh capability
+        Peer supports BGP route AS4 capability
+        Address family IPv4 Unicast: advertised and received
+
+ InQ updates: 0, OutQ updates: 0
+ NLRI statistics:
+        Rcvd:   UnReach NLRI          0,      Reach NLRI          2
+        Sent:   UnReach NLRI          0,      Reach NLRI         20
+
+ Message statistics:
+ Msg type     Last rcvd time/      Current rcvd count/      History rcvd count/
+              Last sent time       Current sent count       History sent count
+ Open         20:25:51-2025.10.14  1                        1
+              20:25:51-2025.10.14  1                        1
+ Update       20:25:52-2025.10.14  3                        3
+              20:25:57-2025.10.14  9                        9
+ Notification -                    0                        0
+              -                    0                        0
+ Keepalive    20:31:18-2025.10.14  7                        7
+              20:31:11-2025.10.14  8                        8
+ RouteRefresh -                    0                        0
+              -                    0                        0
+ Total        -                    11                       11
+              -                    18                       18
+
+ Maximum allowed prefix number: 4294967295
+ Threshold: 75%
+ Authentication type configured: None
+ Minimum time between advertisements is 30 seconds
+ Optional capabilities:
+  Multi-protocol extended capability has been enabled
+  Route refresh capability has been enabled
+  Extended nexthop encoding has been enabled
+ Peer preferred value: 0
+ Site-of-Origin: Not specified
+ Routing policy configured:
+ No routing policy is configured
+[PE4]
 ```   
 
 
-Проверка связности:
+Reg1-R1:
 ```   
+[Reg1-R1]display ip routing-table
+
+Destinations : 16       Routes : 17
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+0.0.0.0/0          Static  60  0           10.0.0.12       GE0/0
+                   Static  60  0           10.0.0.16       GE0/1
+0.0.0.0/32         Direct  0   0           127.0.0.1       InLoop0
+1.1.1.1/32         BGP     255 0           10.0.0.12       GE0/0
+10.0.0.12/31       Direct  0   0           10.0.0.13       GE0/0
+10.0.0.13/32       Direct  0   0           127.0.0.1       InLoop0
+10.0.0.16/31       O_ASE2  150 1           10.1.0.1        GE0/1
+10.1.0.0/31        Direct  0   0           10.1.0.0        GE0/1
+10.1.0.0/32        Direct  0   0           127.0.0.1       InLoop0
+11.11.11.11/32     Direct  0   0           127.0.0.1       InLoop0
+12.12.12.12/32     O_INTRA 10  1           10.1.0.1        GE0/1
+127.0.0.0/8        Direct  0   0           127.0.0.1       InLoop0
+127.0.0.1/32       Direct  0   0           127.0.0.1       InLoop0
+127.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+224.0.0.0/4        Direct  0   0           0.0.0.0         NULL0
+224.0.0.0/24       Direct  0   0           0.0.0.0         NULL0
+255.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+[Reg1-R1]
+[Reg1-R1]display ip routing-table protocol bgp
+
+Summary count : 1
+
+BGP Routing table status : <Active>
+Summary count : 1
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+1.1.1.1/32         BGP     255 0           10.0.0.12       GE0/0
+
+BGP Routing table status : <Inactive>
+Summary count : 0
+[Reg1-R1]
+[Reg1-R1]disp bgp peer ipv4
+
+ BGP local router ID: 11.11.11.11
+ Local AS number: 65001
+ Total number of peers: 1                 Peers in established state: 1
+
+  * - Dynamically created peer
+  Peer                    AS  MsgRcvd  MsgSent OutQ PrefRcv Up/Down  State
+
+  10.0.0.12            65000       25       22    0       2 00:15:57 Established
+[Reg1-R1]
+[Reg1-R1]disp bgp peer ipv4 verbose
+
+        Peer: 10.0.0.12 Local: 11.11.11.11
+        Type: EBGP link
+        Peer's description: "PE1"
+        BGP version 4, remote router ID 1.1.1.1
+        BGP current state: Established, Up for 00h16m01s
+        BGP current event: RecvKeepalive
+        BGP last state: OpenConfirm
+        Port:  Local - 52160    Remote - 179
+        Configured: Active Hold Time: 180 sec   Keepalive Time: 60 sec
+        Received  : Active Hold Time: 180 sec
+        Negotiated: Active Hold Time: 180 sec   Keepalive Time: 60 sec
+        Peer optional capabilities:
+        Peer supports BGP multi-protocol extension
+        Peer supports BGP route refresh capability
+        Peer supports BGP route AS4 capability
+        Address family IPv4 Unicast: advertised and received
+
+ InQ updates: 0, OutQ updates: 0
+ NLRI statistics:
+        Rcvd:   UnReach NLRI          0,      Reach NLRI          2
+        Sent:   UnReach NLRI          0,      Reach NLRI          2
+
+ Message statistics:
+ Msg type     Last rcvd time/      Current rcvd count/      History rcvd count/
+              Last sent time       Current sent count       History sent count
+ Open         20:13:32-2025.10.14  1                        1
+              20:13:32-2025.10.14  1                        1
+ Update       20:13:33-2025.10.14  3                        3
+              20:13:33-2025.10.14  3                        3
+ Notification -                    0                        0
+              -                    0                        0
+ Keepalive    20:29:07-2025.10.14  21                       21
+              20:28:51-2025.10.14  18                       18
+ RouteRefresh -                    0                        0
+              -                    0                        0
+ Total        -                    25                       25
+              -                    22                       22
+
+ Maximum allowed prefix number: 4294967295
+ Threshold: 75%
+ Minimum time between advertisements is 30 seconds
+ Optional capabilities:
+  Multi-protocol extended capability has been enabled
+  Route refresh capability has been enabled
+ Peer preferred value: 0
+ Site-of-Origin: Not specified
+ Routing policy configured:
+ No routing policy is configured
+[Reg1-R1]
 ```   
 
-	
+
+Reg3-R2:
+```   
+[Reg3-R2]display ip routing-table
+
+Destinations : 18       Routes : 18
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+0.0.0.0/0          Static  60  0           10.0.0.22       GE0/0
+0.0.0.0/32         Direct  0   0           127.0.0.1       InLoop0
+4.4.4.4/32         BGP     255 0           10.0.0.22       GE0/0
+10.0.0.18/31       BGP     255 0           10.0.0.22       GE0/0
+10.0.0.20/31       O_ASE2  150 1           10.3.0.0        GE0/1
+10.0.0.22/31       Direct  0   0           10.0.0.23       GE0/0
+10.0.0.23/32       Direct  0   0           127.0.0.1       InLoop0
+10.3.0.0/31        Direct  0   0           10.3.0.1        GE0/1
+10.3.0.1/32        Direct  0   0           127.0.0.1       InLoop0
+22.22.22.22/32     BGP     255 0           10.0.0.22       GE0/0
+31.31.31.31/32     O_INTRA 10  1           10.3.0.0        GE0/1
+32.32.32.32/32     Direct  0   0           127.0.0.1       InLoop0
+127.0.0.0/8        Direct  0   0           127.0.0.1       InLoop0
+127.0.0.1/32       Direct  0   0           127.0.0.1       InLoop0
+127.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+224.0.0.0/4        Direct  0   0           0.0.0.0         NULL0
+224.0.0.0/24       Direct  0   0           0.0.0.0         NULL0
+255.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+[Reg3-R2]
+[Reg3-R2]display ip routing-table protocol bgp
+
+Summary count : 3
+
+BGP Routing table status : <Active>
+Summary count : 3
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+4.4.4.4/32         BGP     255 0           10.0.0.22       GE0/0
+10.0.0.18/31       BGP     255 0           10.0.0.22       GE0/0
+22.22.22.22/32     BGP     255 0           10.0.0.22       GE0/0
+
+BGP Routing table status : <Inactive>
+Summary count : 0
+[Reg3-R2]disp bgp peer ipv4
+
+ BGP local router ID: 32.32.32.32
+ Local AS number: 65003
+ Total number of peers: 1                 Peers in established state: 1
+
+  * - Dynamically created peer
+  Peer                    AS  MsgRcvd  MsgSent OutQ PrefRcv Up/Down  State
+
+  10.0.0.22            65000       21       13    0       4 00:08:05 Established
+[Reg3-R2]
+[Reg3-R2]disp bgp peer ipv4 verbose
+
+        Peer: 10.0.0.22 Local: 32.32.32.32
+        Type: EBGP link
+        Peer's description: "PE4"
+        BGP version 4, remote router ID 4.4.4.4
+        BGP current state: Established, Up for 00h08m10s
+        BGP current event: KATimerExpired
+        BGP last state: OpenConfirm
+        Port:  Local - 26432    Remote - 179
+        Configured: Active Hold Time: 180 sec   Keepalive Time: 60 sec
+        Received  : Active Hold Time: 180 sec
+        Negotiated: Active Hold Time: 180 sec   Keepalive Time: 60 sec
+        Peer optional capabilities:
+        Peer supports BGP multi-protocol extension
+        Peer supports BGP route refresh capability
+        Peer supports BGP route AS4 capability
+        Address family IPv4 Unicast: advertised and received
+
+ InQ updates: 0, OutQ updates: 0
+ NLRI statistics:
+        Rcvd:   UnReach NLRI          0,      Reach NLRI          8
+        Sent:   UnReach NLRI          0,      Reach NLRI          2
+
+ Message statistics:
+ Msg type     Last rcvd time/      Current rcvd count/      History rcvd count/
+              Last sent time       Current sent count       History sent count
+ Open         20:25:41-2025.10.14  1                        1
+              20:25:41-2025.10.14  1                        1
+ Update       20:25:46-2025.10.14  9                        9
+              20:25:42-2025.10.14  3                        3
+ Notification -                    0                        0
+              -                    0                        0
+ Keepalive    20:33:15-2025.10.14  11                       11
+              20:33:47-2025.10.14  10                       10
+ RouteRefresh -                    0                        0
+              -                    0                        0
+ Total        -                    21                       21
+              -                    14                       14
+
+ Maximum allowed prefix number: 4294967295
+ Threshold: 75%
+ Minimum time between advertisements is 30 seconds
+ Optional capabilities:
+  Multi-protocol extended capability has been enabled
+  Route refresh capability has been enabled
+ Peer preferred value: 0
+ Site-of-Origin: Not specified
+ Routing policy configured:
+ No routing policy is configured
+[Reg3-R2]
+
+```   
+
+
+
+Проверка связности (с Reg1-R1 все PE):
+```   
+[Reg1-R1]ping 1.1.1.1
+Ping 1.1.1.1 (1.1.1.1): 56 data bytes, press CTRL+C to break
+56 bytes from 1.1.1.1: icmp_seq=0 ttl=255 time=1.000 ms
+56 bytes from 1.1.1.1: icmp_seq=1 ttl=255 time=1.000 ms
+56 bytes from 1.1.1.1: icmp_seq=2 ttl=255 time=1.000 ms
+56 bytes from 1.1.1.1: icmp_seq=3 ttl=255 time=0.000 ms
+56 bytes from 1.1.1.1: icmp_seq=4 ttl=255 time=0.000 ms
+
+--- Ping statistics for 1.1.1.1 ---
+5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
+round-trip min/avg/max/std-dev = 0.000/0.600/1.000/0.490 ms
+
+[Reg1-R1]ping 2.2.2.2
+Ping 2.2.2.2 (2.2.2.2): 56 data bytes, press CTRL+C to break
+56 bytes from 2.2.2.2: icmp_seq=0 ttl=254 time=2.000 ms
+56 bytes from 2.2.2.2: icmp_seq=1 ttl=254 time=1.000 ms
+56 bytes from 2.2.2.2: icmp_seq=2 ttl=254 time=2.000 ms
+56 bytes from 2.2.2.2: icmp_seq=3 ttl=254 time=1.000 ms
+56 bytes from 2.2.2.2: icmp_seq=4 ttl=254 time=1.000 ms
+
+--- Ping statistics for 2.2.2.2 ---
+5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
+round-trip min/avg/max/std-dev = 1.000/1.400/2.000/0.490 ms
+
+[Reg1-R1]
+[Reg1-R1]ping 3.3.3.3
+Ping 3.3.3.3 (3.3.3.3): 56 data bytes, press CTRL+C to break
+56 bytes from 3.3.3.3: icmp_seq=0 ttl=254 time=2.000 ms
+56 bytes from 3.3.3.3: icmp_seq=1 ttl=254 time=1.000 ms
+56 bytes from 3.3.3.3: icmp_seq=2 ttl=254 time=2.000 ms
+56 bytes from 3.3.3.3: icmp_seq=3 ttl=254 time=1.000 ms
+56 bytes from 3.3.3.3: icmp_seq=4 ttl=254 time=0.000 ms
+
+--- Ping statistics for 3.3.3.3 ---
+5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
+round-trip min/avg/max/std-dev = 0.000/1.200/2.000/0.748 ms
+
+[Reg1-R1]
+[Reg1-R1]ping 4.4.4.4
+Ping 4.4.4.4 (4.4.4.4): 56 data bytes, press CTRL+C to break
+56 bytes from 4.4.4.4: icmp_seq=0 ttl=254 time=2.000 ms
+56 bytes from 4.4.4.4: icmp_seq=1 ttl=254 time=1.000 ms
+56 bytes from 4.4.4.4: icmp_seq=2 ttl=254 time=1.000 ms
+56 bytes from 4.4.4.4: icmp_seq=3 ttl=254 time=2.000 ms
+56 bytes from 4.4.4.4: icmp_seq=4 ttl=254 time=1.000 ms
+
+--- Ping statistics for 4.4.4.4 ---
+5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
+round-trip min/avg/max/std-dev = 1.000/1.400/2.000/0.490 ms
+```   
+
+
+Reg1-R1 &rarr; Reg2-R1:
+```   
+[Reg1-R1]ping 10.0.0.15
+Ping 10.0.0.15 (10.0.0.15): 56 data bytes, press CTRL+C to break
+56 bytes from 10.0.0.15: icmp_seq=0 ttl=253 time=2.000 ms
+56 bytes from 10.0.0.15: icmp_seq=1 ttl=253 time=2.000 ms
+56 bytes from 10.0.0.15: icmp_seq=2 ttl=253 time=1.000 ms
+56 bytes from 10.0.0.15: icmp_seq=3 ttl=253 time=2.000 ms
+56 bytes from 10.0.0.15: icmp_seq=4 ttl=253 time=2.000 ms
+
+--- Ping statistics for 10.0.0.15 ---
+5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
+round-trip min/avg/max/std-dev = 1.000/1.800/2.000/0.400 ms
+```   
+
+Reg1-R1 &rarr; Reg2-R2:
+```   
+[Reg1-R1]ping 10.0.0.19
+Ping 10.0.0.19 (10.0.0.19): 56 data bytes, press CTRL+C to break
+56 bytes from 10.0.0.19: icmp_seq=0 ttl=253 time=5.000 ms
+56 bytes from 10.0.0.19: icmp_seq=1 ttl=253 time=1.000 ms
+56 bytes from 10.0.0.19: icmp_seq=2 ttl=253 time=2.000 ms
+56 bytes from 10.0.0.19: icmp_seq=3 ttl=253 time=2.000 ms
+56 bytes from 10.0.0.19: icmp_seq=4 ttl=253 time=3.000 ms
+
+--- Ping statistics for 10.0.0.19 ---
+5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
+round-trip min/avg/max/std-dev = 1.000/2.600/5.000/1.356 ms
+```   
+
+Reg1-R1 &rarr; Reg3-R1:
+```   
+[Reg1-R1]ping 10.0.0.21
+Ping 10.0.0.21 (10.0.0.21): 56 data bytes, press CTRL+C to break
+56 bytes from 10.0.0.21: icmp_seq=0 ttl=253 time=2.000 ms
+56 bytes from 10.0.0.21: icmp_seq=1 ttl=253 time=2.000 ms
+56 bytes from 10.0.0.21: icmp_seq=2 ttl=253 time=2.000 ms
+56 bytes from 10.0.0.21: icmp_seq=3 ttl=253 time=2.000 ms
+56 bytes from 10.0.0.21: icmp_seq=4 ttl=253 time=2.000 ms
+
+--- Ping statistics for 10.0.0.21 ---
+5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
+round-trip min/avg/max/std-dev = 2.000/2.000/2.000/0.000 ms
+```   
+
+Reg1-R1 &rarr; Reg3-R2:
+```   
+[Reg1-R1]ping 10.0.0.23
+Ping 10.0.0.23 (10.0.0.23): 56 data bytes, press CTRL+C to break
+56 bytes from 10.0.0.23: icmp_seq=0 ttl=253 time=2.000 ms
+56 bytes from 10.0.0.23: icmp_seq=1 ttl=253 time=2.000 ms
+56 bytes from 10.0.0.23: icmp_seq=2 ttl=253 time=1.000 ms
+56 bytes from 10.0.0.23: icmp_seq=3 ttl=253 time=2.000 ms
+56 bytes from 10.0.0.23: icmp_seq=4 ttl=253 time=3.000 ms
+
+--- Ping statistics for 10.0.0.23 ---
+5 packet(s) transmitted, 5 packet(s) received, 0.0% packet loss
+round-trip min/avg/max/std-dev = 1.000/2.000/3.000/0.632 ms
+```   
+
+Конфигурационныe файлы можно найти по [ссылке](./cfg).	
 ### Настройка iBGP
 текст
 ```   
