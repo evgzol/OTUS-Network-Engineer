@@ -421,7 +421,7 @@ Reg1-VPC1>
 [Reg1-DSW1-Vlan-interface99]vrrp vrid 1 priority 200
 ```   
 
-Провека:
+Проверка:
 ```   
 [Reg1-DSW1]disp vrrp verbose
 IPv4 Virtual Router Information:
@@ -509,11 +509,13 @@ IPv4 Virtual Router Information:
 Настройка на маршрутизаторах (Регион 2) аналогична.
 
 
-### Настройка Spanning Tree RSTP
+### Настройка Spanning Tree
 
-Рассмотрим настройку RSTP (Rapid Spanning-tree Protocol) на примере Региона 2.
+Для предотвращения образования петель активируем STP. На всех коммутаторах всех регионов настроим более
+современную версию протокола &mdash; RSTP (Rapid Spanning-tree Protocol) на примере Региона 2.
+Данный протокол обладает достаточно быстрой сходимостью (около 1 секунды) и поддерживается большинством производителей datacom-оборудования.
 
-Для предотвращения образования петель поднимем на всех коммутаторах региона RSTP с помощью команды:
+Поднимем на всех коммутаторах региона RSTP:
 ```   
 stp mode rstp
 stp global enable
@@ -575,11 +577,16 @@ stp global enable
 
 ### Объединение коммутаторов в стек
 
-Технология стэкирования не стандартизована и у каждого вендора своя. У H3C она называется IRF (Intelligent Resilient Framework), у Huawei &mdash; iStack, у Cisco &mdash; Stack.
+Технология стэкирования не стандартизована и у каждого производителя своя.
+У H3C она называется IRF (Intelligent Resilient Framework), у Huawei &mdash; iStack, у Cisco &mdash; Stack.
+Т.е. не могут стекироваться коммутаторы разных производителей оборудования. Также не могут стекироваться коммутаторы разных линеек одного и того же производителя.
+Более того: для стекирования могут использоваться только коммутаторы одной модели с одинаковой версией прошивки.
 
 Объединим DSW-коммутаторы в Регионе 2 в стек.
 
-Reg2-DSW1:
+<details>
+<summary>  Reg2-DSW1: </summary>
+
 ```   
 # блокируем интерфейсы
 int range fge1/0/53 fge1/0/54
@@ -610,19 +617,22 @@ reboot
 Y
 
 ```   
+</details>
 
-На Reg2-DSW2 настройка аналогична, но задаю "второй номер" в стеке:
+
+<details>
+<summary>  Reg2-DSW2: </summary>
+
 ```   
 int range fge1/0/53 fge1/0/54
-shut
+ shut
 quit
-
 irf member 1 renumber 2
-
 irf-port 1/2
 port group int fge1/0/53
 port group int fge1/0/54
 int range fge1/0/53 fge1/0/54
+
 undo shutdown
 
 save
@@ -632,6 +642,9 @@ quit
 reboot
 Y            
 ```   
+</details>
+
+
 Коммутаторы проводят выборы мастера. Тот, которой не пройдет, автоматически перезапустится. После завершения перезапуска формируется IRF.
 
 Поскольку первый коммутатор вручную настроен с приоритетом 32 (значение по умолчанию равно 1, чем больше значение, тем выше приоритет, а максимальное значение равно 32), он будет выбран в качестве основного, и DSW2 перезапустится. После перезагрузки настройка IRF будет завершена и системное имя объединяется в Reg2-DSW1..
@@ -643,7 +656,7 @@ Y
 <Reg2-DSW>
 ```   
 
-Т.о. у нас теперь один логичесий коммутатор DSW в Регионе 2.
+Т.о. у нас теперь один логический коммутатор DSW в Регионе 2.
 Что видно в настройках:
 
 ```   
@@ -704,7 +717,7 @@ irf-port 2/2
  RootPort ID         : 128.50
 ```   
 
-Далее настраиваю Bridge-Aggregation Groups в LACP.
+Далее настраиваем Bridge-Aggregation Groups в LACP.
 
 
 Теперь нет DISCARDING портов:
@@ -758,7 +771,10 @@ irf-port 2/2
 
 Стэк развалился, оба коммутатора считают себя главными, в сети два устройства с одинаковым именем.
 
-Ниже диагностика с первого коммутатора стека:
+Ниже диагностика с первого коммутатора стека.
+<details>
+<summary> Диагностика с первого коммутатора стека: </summary>
+
 ```
 <Reg2-DSW>disp irf
 MemberID    Role    Priority  CPU-Mac         Description
@@ -783,8 +799,11 @@ Member 1
  1        1        FortyGigE1/0/53               disable
                    FortyGigE1/0/54
 ```
+<details>
 
-И со второго:
+<details>
+<summary> Диагностика со второго коммутатора стека: </summary>
+
 ```
 <Reg2-DSW>disp irf
 MemberID    Role    Priority  CPU-Mac         Description
@@ -809,9 +828,10 @@ Member 2
  2        2        disable                       FortyGigE2/0/53
                                                  FortyGigE2/0/54
 ```
+</details>
 
 
-Также аварийные сообщения с коммутаторов уровня доступа:
+Также приведены аварийные сообщения с коммутаторов уровня доступа:
 ```
 [Reg2-ASW1]
 %Oct  4 20:19:30:851 2025 Reg2-ASW1 LAGG/6/LAGG_INACTIVE_PHYSTATE: Member port XGE1/0/50 of aggregation group BAGG1 changed to the inactive state, because the physical state of the port is down.
@@ -851,7 +871,11 @@ Member 2
 ```
 
 
-Диагностика:
+Диагностикаприведена ниже.
+
+<details>
+<summary> Диагностика восстановления стека: </summary>
+
 
 ```
 <Reg2-DSW>disp irf
@@ -885,8 +909,10 @@ Member 2
  2        2        disable                       FortyGigE2/0/53
                                                  FortyGigE2/0/54
 ```
+</details>
 
-На восстановление стека в лабораторных условиях ушло две минуты, что достаточно много по времени. Т.о. даже при случайной блокировке портов, например ошибка ввода/скрипта при проведении работ, возможна аварийная ситуации высокого приоритета.
+На восстановление стека в лабораторных условиях ушло две минуты, что достаточно много по времени. Т.о. даже
+при случайной блокировке портов стека, например ошибка ввода и/или заранее подготовленного скрипта при проведении работ (не говоря уже о повреждении линков/портов), возможна аварийная ситуации высокого приоритета.
 
 Ниже рассмотрим, какие средства есть для защиты стека.
 
@@ -1008,7 +1034,11 @@ MAD BFD enabled interface: Vlan-interface999
 ![MLAG-VRRP.svg](./img/MLAG-VRRP.svg)
 
 
-Настроим M-LAG со стороны Reg3-DSW1, также выполним настройку VRRP:
+Настроим M-LAG, также выполним настройку VRRP:
+
+<details>
+<summary> Reg3-DSW1: </summary>
+
 
 ```   
 
@@ -1097,7 +1127,97 @@ interface vlan-interface 20
  vrrp vrid 2 priority 200
 quit
 ```   
-Настройка на Reg3-DSW2 аналогична.
+</details>
+
+
+<details>
+<summary> Reg3-DSW2: </summary>
+
+```   
+m-lag system-mac 1-1-1
+m-lag system-number 2
+m-lag system-priority 123
+m-lag keepalive ip destination 111.111.111.111 source 111.111.111.112
+
+interface ge1/0/48
+ port link-mode route
+ ip address 111.111.111.112 24
+quit
+
+m-lag mad exclude interface ge1/0/48
+
+interface bridge-aggregation 100
+ link-aggregation mode dynamic
+quit
+
+interface fge1/0/53
+ port link-aggregation group 100
+quit
+
+interface fge1/0/54
+ port link-aggregation group 100
+quit
+
+interface bridge-aggregation 100
+ port m-lag peer-link 1
+ undo mac-address static source-check enable
+quit
+
+interface bridge-aggregation 101
+ link-aggregation mode dynamic
+ port m-lag group 1
+quit
+
+interface xge1/0/49
+ port link-aggregation group 101
+quit
+
+interface bridge-aggregation 102
+ link-aggregation mode dynamic
+ port m-lag group 2
+quit
+
+interface xge1/0/50
+ port link-aggregation group 102
+quit
+
+vlan 10
+quit
+
+vlan 20
+quit
+
+interface bridge-aggregation 101
+ port link-type trunk
+ port trunk permit vlan 10
+quit
+
+interface bridge-aggregation 102
+ port link-type trunk
+ port trunk permit vlan 20
+quit
+
+interface vlan-interface 10
+ ip address 10.3.10.252 24
+quit
+
+interface vlan-interface 20
+ ip address 10.3.20.252 24
+quit
+
+m-lag mad exclude interface vlan-interface 10
+m-lag mad exclude interface vlan-interface 20
+
+interface vlan-interface 10
+ vrrp vrid 1 virtual-ip 10.3.10.254
+quit
+
+interface vlan-interface 20
+ vrrp vrid 2 virtual-ip 10.3.20.254
+quit
+
+```   
+</details>
 
 На коммутаторах уровня доступа (на примере Reg3-ASW1) настройки следующие:
 
@@ -1123,6 +1243,9 @@ quit
 ```   
 
 Проверим, что Reg3-DSW1 сформировал систему M-LAG с Reg3-DSW2:
+
+<details>
+<summary> Reg3-DSW1: </summary>
 
 ```   
 [Reg3-DSW1]display m-lag summary
@@ -1178,6 +1301,9 @@ Local DRCP flags/Peer DRCP flags: ABDFG/ABDFG
 Local Selected ports (index): XGE1/0/50 (51)
 Peer Selected ports indexes: 51
 ```   
+
+</details>
+
 
 Проверяем, что Reg3-ASW1 и Reg3-ASW2 корректно сформировали агрегированные соединения с системой M-LAG:
 
