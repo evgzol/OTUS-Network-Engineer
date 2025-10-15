@@ -1255,9 +1255,10 @@ Remote:
 |Reg1-DSW2 | 112.112.112.112 |
 
 
-Ниже приведена настройка протокола OSPF на всех CE и DSW.
+Ниже приведена настройка протокола OSPF на всех CE и DSW региона.
 <details>
 <summary>  Reg1-R1 </summary>
+
 ```   
 ospf 1 router-id 11.11.11.11
  import-route direct
@@ -1300,6 +1301,7 @@ quit
 
 <details>
 <summary>  Reg1-R2 </summary>
+
 ```   
 ospf 1 router-id 12.12.12.12
  import-route direct
@@ -1341,6 +1343,7 @@ quit
 
 <details>
 <summary>  Reg1-DSW1 </summary>
+
 ```  
 ospf 1 router-id 111.111.111.111
  silent-interface all
@@ -1385,6 +1388,7 @@ quit
 
 <details>
 <summary>  Reg1-DSW2 </summary>
+
 ```  
 ospf 1 router-id 112.112.112.112
  silent-interface all
@@ -1433,6 +1437,7 @@ quit
 
 <details>
 <summary> На маршрутизаторах </summary>
+
 ```   
 [Reg1-R1]disp ip routing-table
 
@@ -1578,6 +1583,7 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 
 <details>
 <summary> На коммутаторах </summary>
+
 ```   
 [Reg1-DSW1]disp ip routing-table
 
@@ -1717,6 +1723,7 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 
 
 Проверка сетевой связности (с VPC пингуются коммутаторы и маршрутизаторы по Loopback-ам):
+
 ```   
 Reg1-VPC1> ping 11.11.11.11
 84 bytes from 11.11.11.11 icmp_seq=1 ttl=254 time=2.000 ms
@@ -2717,6 +2724,7 @@ round-trip min/avg/max/std-dev = 1.000/2.000/3.000/0.632 ms
 
 <details>
 <summary> PE1 </summary>
+
 ```   
 bgp 65000
  peer 2.2.2.2 as-number 65000
@@ -2745,6 +2753,7 @@ quit
 
 <details>
 <summary> PE2&ndash;PE4 </summary>
+
 ```   
 bgp 65000
  peer 1.1.1.1 as-number 65000
@@ -2764,6 +2773,7 @@ quit
 
 <details>
 <summary> До настройки iBGP </summary>
+
 ```   
 <PE1>display bgp routing-table ipv4
 
@@ -2849,6 +2859,7 @@ quit
 После настройки появились записи iBGP.
 <details>
 <summary> После настройки iBGP </summary>
+
 ```   
 [PE1]display bgp routing-table ipv4
 
@@ -2969,6 +2980,7 @@ quit
 Ниже приведена остальная диагностика.
 <details>
 <summary> PE1 </summary>
+
 ```   
 [PE1]display ip routing-table
 
@@ -3272,6 +3284,7 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 
 <details>
 <summary> PE2 </summary>
+
 ```   
 [PE2]display ip routing-table
 
@@ -3357,6 +3370,7 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 
 <details>
 <summary> PE3 </summary>
+
 ```   
 [PE3]display ip routing-table
 
@@ -3443,6 +3457,7 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 
 <details>
 <summary> PE4 </summary>
+
 ```   
 [PE4]display ip routing-table
 
@@ -3533,24 +3548,28 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 
 <details>
 <summary> PE1 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE2 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE3 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE4 </summary>
+
 ```   
 ```   
 </details>
@@ -3559,24 +3578,28 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 Диагностика:
 <details>
 <summary> PE1 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE2 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE3 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE4 </summary>
+
 ```   
 ```   
 </details>
@@ -3586,12 +3609,14 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 
 <details>
 <summary> PE1 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE2 </summary>
+
 ```   
 ```   
 </details>
@@ -3604,6 +3629,7 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 
 <details>
 <summary> PE4 </summary>
+
 ```   
 ```   
 </details>
@@ -3617,24 +3643,28 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 
 <details>
 <summary> PE1 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE2 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE3 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE4 </summary>
+
 ```   
 ```   
 </details>
@@ -3643,24 +3673,28 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 Диагностика:
 <details>
 <summary> PE1 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE2 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE3 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE4 </summary>
+
 ```   
 ```   
 </details>
@@ -3670,24 +3704,28 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 
 <details>
 <summary> PE1 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE2 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE3 </summary>
+
 ```   
 ```   
 </details>
 
 <details>
 <summary> PE4 </summary>
+
 ```   
 ```   
 </details>
