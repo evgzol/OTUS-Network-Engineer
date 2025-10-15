@@ -1917,10 +1917,84 @@ round-trip min/avg/max/std-dev = 2.008/3.219/7.193/1.995 ms
 Где 49 &mdash; указывает тип адреса (приватный), 6500 &mdash; номер зоны, 0000.0000.000**X** &mdash; ID устройства (у нас будет по номеру маршрутизатора), 00 - селектор (всегда ноль).
 
 На интерфейсах настроим isis circuit-type p2p для оптимизации работы протокола.
-Заданы is-name для передачи информации о hostname ISIS соседям в пределах общей зоны.
-На интерфейсах подключения регионов настроим режим isis silent, чтобы не отправлять hello в клиентские порты.
+Заданы is-name для передачи информации о hostname IS-IS соседям в пределах общей зоны.
+На интерфейсах подключения регионов настроим режим isis silent, чтобы не отправлять Hello в порты региональных маршрутизаторов.
 
-Настройка на примере маршрутизатора PE3:
+Ниже приведены настройки PE-маршрутизаторов.
+
+<details>
+<summary> PE1: </summary>
+
+```   
+isis 65000
+ is-level level-1
+ network-entity 49.6500.0000.0000.0001.00
+ is-name PE1
+quit
+
+interface GE0/0/0
+ isis enable 65000
+ isis circuit-type p2p 
+quit
+
+interface GE0/0/1
+ isis enable 65000
+ isis circuit-type p2p 
+quit
+
+interface GE0/0/2
+ isis enable 65000
+ isis circuit-type p2p 
+quit
+
+interface GE0/0/7
+ isis enable 65000
+ isis silent
+quit
+
+int loopback0
+  isis enable 65000
+quit
+```   
+</details>
+<details>
+<summary> PE2: </summary>
+
+```   
+isis 65000
+ is-level level-1
+ network-entity 49.6500.0000.0000.0002.00
+ is-name PE2
+quit
+
+interface GE0/0/0
+ isis enable 65000
+ isis circuit-type p2p 
+quit
+
+interface GE0/0/1
+ isis enable 65000
+ isis circuit-type p2p 
+quit
+
+interface GE0/0/2
+ isis enable 65000
+ isis circuit-type p2p 
+quit
+
+interface GE0/0/7
+ isis enable 65000
+ isis silent
+quit
+
+int loopback0
+  isis enable 65000
+quit
+```   
+</details>
+<details>
+<summary> PE3: </summary>
+
 ```   
 isis 65000
  is-level level-1
@@ -1957,14 +2031,206 @@ int loopback0
   isis enable 65000
 quit
 ```   
+</details>
+<details>
+<summary> PE4: </summary>
 
-Для остальных маршрутизаторов настройки аналогичны.
+```   
+isis 65000
+ is-level level-1
+ network-entity 49.6500.0000.0000.0004.00
+ is-name PE4
+quit
 
-Диагностика протокола на примере PE3 приведена ниже.
+interface GE0/0/0
+ isis enable 65000
+ isis circuit-type p2p 
+quit
+
+interface GE0/0/1
+ isis enable 65000
+ isis circuit-type p2p 
+quit
+
+interface GE0/0/2
+ isis enable 65000
+ isis circuit-type p2p 
+quit
+
+interface GE0/0/7
+ isis enable 65000
+ isis silent
+quit
+
+interface GE0/0/8
+ isis enable 65000
+ isis silent
+quit
+
+int loopback0
+  isis enable 65000
+quit
+```   
+</details>
+
+#### Диагностика
+
+
+<details>
+<summary> PE1: </summary>
+
+```   
+PE1:
+
+[PE1]display ip routing-table
+
+Destinations : 17       Routes : 20
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+1.1.1.1/32         Direct  0   0           127.0.0.1       Loop0
+2.2.2.2/32         IS_L1   15  10          10.0.0.1        GE0/0/0
+3.3.3.3/32         IS_L1   15  10          10.0.0.3        GE0/0/1
+4.4.4.4/32         IS_L1   15  10          10.0.0.5        GE0/0/2
+10.0.0.0/31        Direct  0   0           10.0.0.0        GE0/0/0
+10.0.0.0/32        Direct  0   0           127.0.0.1       GE0/0/0
+10.0.0.2/31        Direct  0   0           10.0.0.2        GE0/0/1
+10.0.0.2/32        Direct  0   0           127.0.0.1       GE0/0/1
+10.0.0.4/31        Direct  0   0           10.0.0.4        GE0/0/2
+10.0.0.4/32        Direct  0   0           127.0.0.1       GE0/0/2
+10.0.0.6/31        IS_L1   15  20          10.0.0.1        GE0/0/0
+                   IS_L1   15  20          10.0.0.3        GE0/0/1
+10.0.0.8/31        IS_L1   15  20          10.0.0.1        GE0/0/0
+                   IS_L1   15  20          10.0.0.5        GE0/0/2
+10.0.0.10/31       IS_L1   15  20          10.0.0.3        GE0/0/1
+                   IS_L1   15  20          10.0.0.5        GE0/0/2
+127.0.0.0/8        Direct  0   0           127.0.0.1       InLoop0
+127.0.0.1/32       Direct  0   0           127.0.0.1       InLoop0
+127.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+255.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+[PE1]display ip routing-table protocol isis
+
+Summary count : 13
+
+ISIS Routing table status : <Active>
+Summary count : 9
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+2.2.2.2/32         IS_L1   15  10          10.0.0.1        GE0/0/0
+3.3.3.3/32         IS_L1   15  10          10.0.0.3        GE0/0/1
+4.4.4.4/32         IS_L1   15  10          10.0.0.5        GE0/0/2
+10.0.0.6/31        IS_L1   15  20          10.0.0.1        GE0/0/0
+                   IS_L1   15  20          10.0.0.3        GE0/0/1
+10.0.0.8/31        IS_L1   15  20          10.0.0.1        GE0/0/0
+                   IS_L1   15  20          10.0.0.5        GE0/0/2
+10.0.0.10/31       IS_L1   15  20          10.0.0.3        GE0/0/1
+                   IS_L1   15  20          10.0.0.5        GE0/0/2
+
+ISIS Routing table status : <Inactive>
+Summary count : 4
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+1.1.1.1/32         IS_L1   15  0           0.0.0.0         Loop0
+10.0.0.0/31        IS_L1   15  10          0.0.0.0         GE0/0/0
+10.0.0.2/31        IS_L1   15  10          0.0.0.0         GE0/0/1
+10.0.0.4/31        IS_L1   15  10          0.0.0.0         GE0/0/2
+[PE1]display isis peer
+
+                       Peer information for IS-IS(65000)
+                       ---------------------------------
+
+ System ID: PE2
+ Interface: GE0/0/0                 Circuit Id:  001
+ State: Up     HoldTime: 26s        Type: L1           PRI: --
+
+ System ID: PE3
+ Interface: GE0/0/1                 Circuit Id:  001
+ State: Up     HoldTime: 24s        Type: L1           PRI: --
+
+ System ID: PE4
+ Interface: GE0/0/2                 Circuit Id:  001
+ State: Up     HoldTime: 28s        Type: L1           PRI: --
+```   
+</details>
+<details>
+<summary> PE2: </summary>
+
+```   
+[PE2]display ip routing-table
+
+Destinations : 17       Routes : 20
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+1.1.1.1/32         IS_L1   15  10          10.0.0.0        GE0/0/0
+2.2.2.2/32         Direct  0   0           127.0.0.1       Loop0
+3.3.3.3/32         IS_L1   15  10          10.0.0.6        GE0/0/2
+4.4.4.4/32         IS_L1   15  10          10.0.0.9        GE0/0/1
+10.0.0.0/31        Direct  0   0           10.0.0.1        GE0/0/0
+10.0.0.1/32        Direct  0   0           127.0.0.1       GE0/0/0
+10.0.0.2/31        IS_L1   15  20          10.0.0.0        GE0/0/0
+                   IS_L1   15  20          10.0.0.6        GE0/0/2
+10.0.0.4/31        IS_L1   15  20          10.0.0.0        GE0/0/0
+                   IS_L1   15  20          10.0.0.9        GE0/0/1
+10.0.0.6/31        Direct  0   0           10.0.0.7        GE0/0/2
+10.0.0.7/32        Direct  0   0           127.0.0.1       GE0/0/2
+10.0.0.8/31        Direct  0   0           10.0.0.8        GE0/0/1
+10.0.0.8/32        Direct  0   0           127.0.0.1       GE0/0/1
+10.0.0.10/31       IS_L1   15  20          10.0.0.6        GE0/0/2
+                   IS_L1   15  20          10.0.0.9        GE0/0/1
+127.0.0.0/8        Direct  0   0           127.0.0.1       InLoop0
+127.0.0.1/32       Direct  0   0           127.0.0.1       InLoop0
+127.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+255.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+[PE2]display ip routing-table protocol isis
+
+Summary count : 13
+
+ISIS Routing table status : <Active>
+Summary count : 9
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+1.1.1.1/32         IS_L1   15  10          10.0.0.0        GE0/0/0
+3.3.3.3/32         IS_L1   15  10          10.0.0.6        GE0/0/2
+4.4.4.4/32         IS_L1   15  10          10.0.0.9        GE0/0/1
+10.0.0.2/31        IS_L1   15  20          10.0.0.0        GE0/0/0
+                   IS_L1   15  20          10.0.0.6        GE0/0/2
+10.0.0.4/31        IS_L1   15  20          10.0.0.0        GE0/0/0
+                   IS_L1   15  20          10.0.0.9        GE0/0/1
+10.0.0.10/31       IS_L1   15  20          10.0.0.6        GE0/0/2
+                   IS_L1   15  20          10.0.0.9        GE0/0/1
+
+ISIS Routing table status : <Inactive>
+Summary count : 4
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+2.2.2.2/32         IS_L1   15  0           0.0.0.0         Loop0
+10.0.0.0/31        IS_L1   15  10          0.0.0.0         GE0/0/0
+10.0.0.6/31        IS_L1   15  10          0.0.0.0         GE0/0/2
+10.0.0.8/31        IS_L1   15  10          0.0.0.0         GE0/0/1
+[PE2]display isis peer
+
+                       Peer information for IS-IS(65000)
+                       ---------------------------------
+
+ System ID: PE1
+ Interface: GE0/0/0                 Circuit Id:  001
+ State: Up     HoldTime: 23s        Type: L1           PRI: --
+
+ System ID: PE4
+ Interface: GE0/0/1                 Circuit Id:  001
+ State: Up     HoldTime: 24s        Type: L1           PRI: --
+
+ System ID: PE3
+ Interface: GE0/0/2                 Circuit Id:  001
+ State: Up     HoldTime: 22s        Type: L1           PRI: --
+```   
+</details>
+<details>
+<summary> PE3: </summary>
+
 ```   
 [PE3]display ip routing-table
 
-Destinations : 20       Routes : 23
+Destinations : 17       Routes : 20
 
 Destination/Mask   Proto   Pre Cost        NextHop         Interface
 1.1.1.1/32         IS_L1   15  10          10.0.0.2        GE0/0/1
@@ -1983,20 +2249,16 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
                    IS_L1   15  20          10.0.0.11       GE0/0/0
 10.0.0.10/31       Direct  0   0           10.0.0.10       GE0/0/0
 10.0.0.10/32       Direct  0   0           127.0.0.1       GE0/0/0
-10.0.0.12/31       IS_L1   15  20          10.0.0.2        GE0/0/1
-10.0.0.16/31       Direct  0   0           10.0.0.16       GE0/0/7
-10.0.0.16/32       Direct  0   0           127.0.0.1       GE0/0/7
 127.0.0.0/8        Direct  0   0           127.0.0.1       InLoop0
 127.0.0.1/32       Direct  0   0           127.0.0.1       InLoop0
 127.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
 255.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
-[PE3]
 [PE3]display ip routing-table protocol isis
 
-Summary count : 15
+Summary count : 13
 
 ISIS Routing table status : <Active>
-Summary count : 10
+Summary count : 9
 
 Destination/Mask   Proto   Pre Cost        NextHop         Interface
 1.1.1.1/32         IS_L1   15  10          10.0.0.2        GE0/0/1
@@ -2008,18 +2270,15 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
                    IS_L1   15  20          10.0.0.11       GE0/0/0
 10.0.0.8/31        IS_L1   15  20          10.0.0.7        GE0/0/2
                    IS_L1   15  20          10.0.0.11       GE0/0/0
-10.0.0.12/31       IS_L1   15  20          10.0.0.2        GE0/0/1
 
 ISIS Routing table status : <Inactive>
-Summary count : 5
+Summary count : 4
 
 Destination/Mask   Proto   Pre Cost        NextHop         Interface
 3.3.3.3/32         IS_L1   15  0           0.0.0.0         Loop0
 10.0.0.2/31        IS_L1   15  10          0.0.0.0         GE0/0/1
 10.0.0.6/31        IS_L1   15  10          0.0.0.0         GE0/0/2
 10.0.0.10/31       IS_L1   15  10          0.0.0.0         GE0/0/0
-10.0.0.16/31       IS_L1   15  10          0.0.0.0         GE0/0/7
-[PE3]
 [PE3]display isis peer
 
                        Peer information for IS-IS(65000)
@@ -2027,16 +2286,91 @@ Destination/Mask   Proto   Pre Cost        NextHop         Interface
 
  System ID: PE4
  Interface: GE0/0/0                 Circuit Id:  001
- State: Up     HoldTime: 22s        Type: L1           PRI: --
+ State: Up     HoldTime: 27s        Type: L1           PRI: --
 
  System ID: PE1
  Interface: GE0/0/1                 Circuit Id:  001
- State: Up     HoldTime: 25s        Type: L1           PRI: --
+ State: Up     HoldTime: 27s        Type: L1           PRI: --
 
  System ID: PE2
  Interface: GE0/0/2                 Circuit Id:  001
- State: Up     HoldTime: 26s        Type: L1           PRI: --
+ State: Up     HoldTime: 23s        Type: L1           PRI: --
 ```   
+</details>
+<details>
+<summary> PE4: </summary>
+
+```   
+[PE4]display ip routing-table
+
+Destinations : 17       Routes : 20
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+1.1.1.1/32         IS_L1   15  10          10.0.0.4        GE0/0/2
+2.2.2.2/32         IS_L1   15  10          10.0.0.8        GE0/0/1
+3.3.3.3/32         IS_L1   15  10          10.0.0.10       GE0/0/0
+4.4.4.4/32         Direct  0   0           127.0.0.1       Loop0
+10.0.0.0/31        IS_L1   15  20          10.0.0.4        GE0/0/2
+                   IS_L1   15  20          10.0.0.8        GE0/0/1
+10.0.0.2/31        IS_L1   15  20          10.0.0.4        GE0/0/2
+                   IS_L1   15  20          10.0.0.10       GE0/0/0
+10.0.0.4/31        Direct  0   0           10.0.0.5        GE0/0/2
+10.0.0.5/32        Direct  0   0           127.0.0.1       GE0/0/2
+10.0.0.6/31        IS_L1   15  20          10.0.0.8        GE0/0/1
+                   IS_L1   15  20          10.0.0.10       GE0/0/0
+10.0.0.8/31        Direct  0   0           10.0.0.9        GE0/0/1
+10.0.0.9/32        Direct  0   0           127.0.0.1       GE0/0/1
+10.0.0.10/31       Direct  0   0           10.0.0.11       GE0/0/0
+10.0.0.11/32       Direct  0   0           127.0.0.1       GE0/0/0
+127.0.0.0/8        Direct  0   0           127.0.0.1       InLoop0
+127.0.0.1/32       Direct  0   0           127.0.0.1       InLoop0
+127.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+255.255.255.255/32 Direct  0   0           127.0.0.1       InLoop0
+[PE4]display ip routing-table protocol isis
+
+Summary count : 13
+
+ISIS Routing table status : <Active>
+Summary count : 9
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+1.1.1.1/32         IS_L1   15  10          10.0.0.4        GE0/0/2
+2.2.2.2/32         IS_L1   15  10          10.0.0.8        GE0/0/1
+3.3.3.3/32         IS_L1   15  10          10.0.0.10       GE0/0/0
+10.0.0.0/31        IS_L1   15  20          10.0.0.4        GE0/0/2
+                   IS_L1   15  20          10.0.0.8        GE0/0/1
+10.0.0.2/31        IS_L1   15  20          10.0.0.4        GE0/0/2
+                   IS_L1   15  20          10.0.0.10       GE0/0/0
+10.0.0.6/31        IS_L1   15  20          10.0.0.8        GE0/0/1
+                   IS_L1   15  20          10.0.0.10       GE0/0/0
+
+ISIS Routing table status : <Inactive>
+Summary count : 4
+
+Destination/Mask   Proto   Pre Cost        NextHop         Interface
+4.4.4.4/32         IS_L1   15  0           0.0.0.0         Loop0
+10.0.0.4/31        IS_L1   15  10          0.0.0.0         GE0/0/2
+10.0.0.8/31        IS_L1   15  10          0.0.0.0         GE0/0/1
+10.0.0.10/31       IS_L1   15  10          0.0.0.0         GE0/0/0
+[PE4]display isis peer
+
+                       Peer information for IS-IS(65000)
+                       ---------------------------------
+
+ System ID: PE3
+ Interface: GE0/0/0                 Circuit Id:  001
+ State: Up     HoldTime: 22s        Type: L1           PRI: --
+
+ System ID: PE2
+ Interface: GE0/0/1                 Circuit Id:  001
+ State: Up     HoldTime: 25s        Type: L1           PRI: --
+
+ System ID: PE1
+ Interface: GE0/0/2                 Circuit Id:  001
+ State: Up     HoldTime: 23s        Type: L1           PRI: --
+```   
+</details>
+
 
 Проверка сетевой связности (пинги по Loopback-ам):
 
