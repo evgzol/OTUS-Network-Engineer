@@ -59,11 +59,11 @@ int GE5/0
  ospf timer hello 3
  ospf timer dead 12
 quit
- 
  ```
 </details>
 <details>
 <summary>  Reg1-R2 </summary>
+
  ```
 ospf 1 router-id 12.12.12.12
  import-route direct
@@ -99,6 +99,5 @@ int GE5/0
  ospf timer hello 3
  ospf timer dead 12
 quit
-
  ```
 </details>
