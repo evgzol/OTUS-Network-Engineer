@@ -25,24 +25,40 @@
 <summary>  Reg1-R1 </summary>
  
  ``` 
-Router>enable
-Router#conf t
-Enter configuration commands, one per line.  End with CNTL/Z.
-Router(config)#hostname R1
-R1(config)#no ip domain-lookup
-R1(config)#
-R1(config)#
-R1(config)#no ip domain-lookup
-R1(config)#
-R1(config)#enable secret class
-R1(config)#line console 0
-R1(config-line)#password cisco
-R1(config-line)#login
-R1(config-line)#line vty 0 4
-R1(config-line)#password cisco
-R1(config-line)#login
-R1(config-line)#service password-encryption
-R1(config)#banner motb $ NE VLEZAY -- UB'YOT!!! $
+ospf 1 router-id 11.11.11.11
+ import-route direct
+ silent-interface all
+ undo silent-interface GE0/1
+ undo silent-interface GE0/2
+ undo silent-interface GE5/0
+  area 0
+ quit
+quit
+
+int loopback0
+ ospf 1 area 0
+quit
+
+int GE0/1
+ ospf 1 area 0
+ ospf network-type p2p
+ ospf timer hello 3
+ ospf timer dead 12
+quit
+
+int GE0/2
+ ospf 1 area 0
+ ospf network-type p2p
+ ospf timer hello 3
+ ospf timer dead 12
+quit
+
+int GE5/0
+ ospf 1 area 0
+ ospf network-type p2p
+ ospf timer hello 3
+ ospf timer dead 12
+quit
  
  ```
 </details>
