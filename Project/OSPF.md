@@ -62,3 +62,43 @@ quit
  
  ```
 </details>
+<details>
+<summary>  Reg1-R2 </summary>
+ ```
+ospf 1 router-id 12.12.12.12
+ import-route direct
+ silent-interface all
+ undo silent-interface GE0/1
+ undo silent-interface GE0/2
+ undo silent-interface GE5/0
+  area 0
+ quit
+quit
+
+int loopback0
+ ospf 1 area 0
+quit
+
+int GE0/1
+ ospf 1 area 0
+ ospf network-type p2p
+ ospf timer hello 3
+ ospf timer dead 12
+quit
+
+int GE0/2
+ ospf 1 area 0
+ ospf network-type p2p
+ ospf timer hello 3
+ ospf timer dead 12
+quit
+
+int GE5/0
+ ospf 1 area 0
+ ospf network-type p2p
+ ospf timer hello 3
+ ospf timer dead 12
+quit
+
+ ```
+</details>
