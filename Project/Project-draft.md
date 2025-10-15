@@ -799,7 +799,7 @@ Member 1
  1        1        FortyGigE1/0/53               disable
                    FortyGigE1/0/54
 ```
-<details>
+</details>
 
 <details>
 <summary> Диагностика со второго коммутатора стека: </summary>
@@ -871,7 +871,7 @@ Member 2
 ```
 
 
-Диагностикаприведена ниже.
+Диагностика приведена ниже.
 
 <details>
 <summary> Диагностика восстановления стека: </summary>
