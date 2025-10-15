@@ -23,7 +23,7 @@
 Ниже приведена настройка протокола OSPF на всех CE и DSW.
 <details>
 <summary>  Reg1-R1 </summary>
-```   
+ ```   
 ospf 1 router-id 11.11.11.11
  import-route direct
  silent-interface all
@@ -59,7 +59,7 @@ int GE5/0
  ospf timer dead 12
 quit
 
-```   
+ ```   
 </details>
 
 
